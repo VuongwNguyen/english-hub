@@ -1,0 +1,12 @@
+services:
+  mongo:
+    image: mongo:latest
+    container_name: english-daily-hub-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - english_daily_hub_mongo_data:/data/db
+
+volumes:
+  english_daily_hub_mongo_data:
