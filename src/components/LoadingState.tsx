@@ -1,5 +1,5 @@
 export function LoadingState({
-  message = 'Loading your plan...',
+  message = 'Loading...',
 }: {
   message?: string
 }) {
