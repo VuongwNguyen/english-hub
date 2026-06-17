@@ -40,6 +40,8 @@ export default function TodayPage() {
 
       const data = await response.json()
       setPlan(data)
+    } catch (error) {
+      console.error(error)
     } finally {
       setActingItemId(null)
     }
