@@ -14,7 +14,7 @@ TypeScript
 MongoDB
 Mongoose
 Tailwind CSS
-pnpm
+yarn
 ```
 
 Do not use Prisma.
@@ -147,7 +147,7 @@ TypeScript
 MongoDB
 Mongoose
 Tailwind CSS
-pnpm
+yarn
 ```
 
 Do not use:
