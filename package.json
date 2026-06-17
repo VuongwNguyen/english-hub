@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "tsx --env-file=.env.local src/server/run-seed.ts"
   },
   "dependencies": {
     "mongoose": "^9.7.0",
