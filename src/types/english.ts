@@ -51,3 +51,13 @@ export type DailyPlanDTO = {
   createdAt: string
   updatedAt: string
 }
+
+export type HistoryEntryDTO = {
+  id: string
+  date: string
+  theme: string | null
+  totalItems: number
+  doneItems: number
+  skippedItems: number
+  minutesSpent: number
+}
