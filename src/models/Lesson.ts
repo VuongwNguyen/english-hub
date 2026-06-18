@@ -54,13 +54,50 @@ const LessonSchema = new Schema(
       type: Boolean,
       default: true,
     },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    generatedFrom: {
+      type: String,
+      default: '',
+    },
+    sourceNames: {
+      type: [String],
+      default: [],
+    },
+    sourceUrls: {
+      type: [String],
+      default: [],
+    },
+    useCount: {
+      type: Number,
+      default: 0,
+    },
+    lastUsedAt: {
+      type: Date,
+      default: null,
+    },
+    lastUsedDate: {
+      type: String,
+      default: null,
+    },
+    regeneratedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
   }
 )
 
+LessonSchema.index({ slug: 1 }, { unique: true })
 LessonSchema.index({ type: 1, isActive: 1 })
+LessonSchema.index({ useCount: 1, lastUsedAt: 1 })
 LessonSchema.index({ topic: 1 })
 LessonSchema.index({ createdAt: -1 })
 
