@@ -10,7 +10,6 @@ const ExternalSourceSchema = new Schema(
     key: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       lowercase: true,
     },
