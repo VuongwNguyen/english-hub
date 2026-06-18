@@ -12,7 +12,8 @@
     "sync:sources": "tsx --env-file=.env.local src/server/run-sync-sources.ts",
     "sync:words": "tsx --env-file=.env.local src/server/run-sync-words.ts",
     "sync:sentences": "tsx --env-file=.env.local src/server/run-sync-sentences.ts",
-    "generate:lessons": "tsx --env-file=.env.local src/server/run-generate-lessons.ts"
+    "generate:lessons": "tsx --env-file=.env.local src/server/run-generate-lessons.ts",
+    "data:bootstrap": "yarn sync:sources && yarn sync:words && yarn sync:sentences && yarn generate:lessons"
   },
   "dependencies": {
     "mongoose": "^9.7.0",
