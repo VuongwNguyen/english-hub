@@ -9,7 +9,8 @@
     "lint": "eslint",
     "seed": "tsx --env-file=.env.local src/server/run-seed.ts",
     "backfill:lesson-slugs": "tsx --env-file=.env.local src/server/backfill-lesson-slugs.ts",
-    "sync:sources": "tsx --env-file=.env.local src/server/run-sync-sources.ts"
+    "sync:sources": "tsx --env-file=.env.local src/server/run-sync-sources.ts",
+    "sync:words": "tsx --env-file=.env.local src/server/run-sync-words.ts"
   },
   "dependencies": {
     "mongoose": "^9.7.0",
