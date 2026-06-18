@@ -53,13 +53,13 @@ export default function HistoryPage() {
   return (
     <AppShell>
       <div className="mb-8">
-        <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+        <p className="text-sm uppercase tracking-[0.3em] text-gold">
           History
         </p>
 
-        <h1 className="mt-2 text-3xl font-bold">Your last 30 days.</h1>
+        <h1 className="mt-2 font-display text-3xl font-medium text-ink">Your last 30 days.</h1>
 
-        <p className="mt-2 text-slate-300">
+        <p className="mt-2 text-ink-soft">
           A gentle record of what you have practiced.
         </p>
       </div>

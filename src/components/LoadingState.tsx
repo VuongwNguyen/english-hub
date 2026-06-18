@@ -4,8 +4,8 @@ export function LoadingState({
   message?: string
 }) {
   return (
-    <div className="flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 px-6 py-12 text-center">
-      <p className="text-sm text-slate-400">{message}</p>
+    <div className="flex items-center justify-center rounded-2xl border border-hairline bg-surface px-6 py-12 text-center shadow-card">
+      <p className="text-sm text-muted">{message}</p>
     </div>
   )
 }

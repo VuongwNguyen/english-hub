@@ -92,13 +92,13 @@ export default function StatsPage() {
   return (
     <AppShell>
       <div className="mb-8">
-        <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+        <p className="text-sm uppercase tracking-[0.3em] text-gold">
           Stats
         </p>
 
-        <h1 className="mt-2 text-3xl font-bold">Your week so far.</h1>
+        <h1 className="mt-2 font-display text-3xl font-medium text-ink">Your week so far.</h1>
 
-        <p className="mt-2 text-slate-300">
+        <p className="mt-2 text-ink-soft">
           A calm look back. Every bit of progress counts.
         </p>
       </div>
@@ -114,8 +114,8 @@ export default function StatsPage() {
 
       {!loading && !loadError && weekly && (
         <div className="grid gap-6">
-          <section className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm text-slate-400">
+          <section className="rounded-3xl border border-t-2 border-hairline border-t-gold-bright bg-surface p-6 shadow-card">
+            <p className="text-sm text-muted">
               {weekly.from} to {weekly.to}
             </p>
 
@@ -144,18 +144,18 @@ export default function StatsPage() {
           </section>
 
           {daily.length > 0 && (
-            <section className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-              <h2 className="text-lg font-semibold">Day by day</h2>
+            <section className="rounded-3xl border border-t-2 border-hairline border-t-gold-bright bg-surface p-6 shadow-card">
+              <h2 className="font-display text-lg font-medium text-ink">Day by day</h2>
 
               <div className="mt-4 grid gap-2">
                 {daily.map((day) => (
                   <div
                     key={day.date}
-                    className="flex flex-col gap-1 rounded-2xl bg-slate-800 p-4 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-1 rounded-2xl bg-surface-soft p-4 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <p className="font-medium text-slate-50">{day.date}</p>
+                    <p className="font-medium text-ink">{day.date}</p>
 
-                    <div className="flex flex-wrap gap-4 text-sm text-slate-400">
+                    <div className="flex flex-wrap gap-4 text-sm text-muted">
                       <span>{day.doneItems} done</span>
                       <span>{day.skippedItems} skipped</span>
                       <span>{day.minutesSpent} minutes</span>

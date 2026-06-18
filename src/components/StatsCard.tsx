@@ -5,9 +5,9 @@ type Props = {
 
 export function StatsCard({ label, value }: Props) {
   return (
-    <div className="rounded-2xl bg-slate-800 p-4">
-      <p className="text-2xl font-semibold">{value}</p>
-      <p className="text-sm text-slate-400">{label}</p>
+    <div className="rounded-2xl bg-accent-tint p-4">
+      <p className="font-display text-2xl font-medium text-accent">{value}</p>
+      <p className="text-sm text-ink-soft/80">{label}</p>
     </div>
   )
 }

@@ -72,15 +72,15 @@ export default function TodayPage() {
   return (
     <AppShell>
       <div className="mb-8">
-        <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+        <p className="text-sm uppercase tracking-[0.3em] text-gold">
           Today
         </p>
 
-        <h1 className="mt-2 text-3xl font-bold">
+        <h1 className="mt-2 font-display text-3xl font-medium text-ink">
           No angry owl here.
         </h1>
 
-        <p className="mt-2 text-slate-300">
+        <p className="mt-2 text-ink-soft">
           One tiny step is enough. Skip is allowed.
         </p>
       </div>
