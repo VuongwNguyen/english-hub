@@ -4,6 +4,7 @@ import { getDateRangeForLastDays } from '@/lib/date'
 import { DailyPlan } from '@/models/DailyPlan'
 import { Lesson } from '@/models/Lesson'
 import { recalculateDailyStats } from '@/server/stats'
+import { createVirtualFallbackLesson } from '@/server/external/generate-lessons-from-cache'
 import { Types } from 'mongoose'
 
 const DAILY_TYPES = [
@@ -37,14 +38,32 @@ async function getRecentLessonIds(today: string, days = 7) {
   return Array.from(ids)
 }
 
+/**
+ * Lesson rotation fallback chain:
+ * 1. Prefer active lessons not used in last 7 days (random sample).
+ * 2. If no fresh lesson exists, pick active lesson with lowest useCount
+ *    and oldest lastUsedAt/createdAt.
+ * 3. If no lesson exists at all for a type, use the virtual built-in
+ *    fallback (never persisted as a real Lesson document).
+ *
+ * Note: excludeIds may contain ids of virtual fallback lessons that were
+ * embedded into a past DailyPlan snapshot (e.g. "virtual-listening-...").
+ * Those are not valid ObjectId strings, so they must be filtered out
+ * before being used in a `$nin: [...new Types.ObjectId(id)]` match —
+ * otherwise `new Types.ObjectId(id)` throws. Excluding them from the
+ * "recently used" set is also semantically correct: a virtual fallback
+ * was never really "used up" from the real lesson pool.
+ */
 async function pickLesson(type: string, excludeIds: string[]) {
+  const validExcludeIds = excludeIds.filter((id) => Types.ObjectId.isValid(id))
+
   const freshCandidates = await Lesson.aggregate([
     {
       $match: {
         type,
         isActive: true,
         _id: {
-          $nin: excludeIds.map((id) => new Types.ObjectId(id)),
+          $nin: validExcludeIds.map((id) => new Types.ObjectId(id)),
         },
       },
     },
@@ -55,26 +74,42 @@ async function pickLesson(type: string, excludeIds: string[]) {
     return freshCandidates[0]
   }
 
-  const fallbackCandidates = await Lesson.aggregate([
-    {
-      $match: {
-        type,
-        isActive: true,
-      },
-    },
-    { $sample: { size: 1 } },
-  ])
+  const leastUsed = await Lesson.findOne({
+    type,
+    isActive: true,
+  })
+    .sort({
+      useCount: 1,
+      lastUsedAt: 1,
+      createdAt: 1,
+    })
+    .lean()
 
-  if (!fallbackCandidates[0]) {
-    throw new Error(`No active lesson found for type: ${type}`)
+  if (leastUsed) {
+    return leastUsed
   }
 
-  return fallbackCandidates[0]
+  return createVirtualFallbackLesson(type)
 }
 
+/**
+ * Builds the DailyPlanItem snapshot for a selected lesson.
+ *
+ * Virtual fallback lessons (see createVirtualFallbackLesson) have a
+ * STRING `_id` like "virtual-listening-1750000000000" — not a valid
+ * ObjectId. DailyPlanItemSchema.lessonId is typed as Schema.Types.ObjectId
+ * (required), so persisting that string directly would fail Mongoose
+ * validation. Rather than relaxing the schema (which would weaken typing
+ * for the common/real-lesson case), we generate a fresh throwaway
+ * ObjectId for virtual lessons. It intentionally doesn't reference any
+ * real Lesson document — this is an emergency-only path expected to be
+ * rare/never hit given the size of the real lesson pool — and the
+ * virtual nature stays inspectable via sourceUrl/content/title, which
+ * are copied through unchanged.
+ */
 function snapshotLesson(lesson: any) {
   return {
-    lessonId: lesson._id,
+    lessonId: lesson.isVirtualFallback ? new Types.ObjectId() : lesson._id,
     type: lesson.type,
     title: lesson.title,
     content: lesson.content,
@@ -126,6 +161,26 @@ export async function getOrCreateTodayPlan(date: string) {
       theme,
       items: selectedLessons.map(snapshotLesson),
     })
+
+    // Only update usage tracking for real database lessons. Virtual
+    // fallback lessons (isVirtualFallback: true) are never persisted to
+    // the Lesson collection, so there is nothing to update for them.
+    const realLessonIds = selectedLessons
+      .filter((lesson) => !lesson.isVirtualFallback)
+      .map((lesson) => lesson._id)
+
+    if (realLessonIds.length > 0) {
+      await Lesson.updateMany(
+        { _id: { $in: realLessonIds } },
+        {
+          $inc: { useCount: 1 },
+          $set: {
+            lastUsedAt: new Date(),
+            lastUsedDate: date,
+          },
+        }
+      )
+    }
 
     await recalculateDailyStats(date)
 
