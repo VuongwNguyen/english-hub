@@ -10,7 +10,8 @@
     "seed": "tsx --env-file=.env.local src/server/run-seed.ts",
     "backfill:lesson-slugs": "tsx --env-file=.env.local src/server/backfill-lesson-slugs.ts",
     "sync:sources": "tsx --env-file=.env.local src/server/run-sync-sources.ts",
-    "sync:words": "tsx --env-file=.env.local src/server/run-sync-words.ts"
+    "sync:words": "tsx --env-file=.env.local src/server/run-sync-words.ts",
+    "sync:sentences": "tsx --env-file=.env.local src/server/run-sync-sentences.ts"
   },
   "dependencies": {
     "mongoose": "^9.7.0",
