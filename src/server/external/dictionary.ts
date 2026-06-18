@@ -1,4 +1,4 @@
-import { fetchJson, HttpError } from './http'
+import { fetchJson, HttpError, sleep } from './http'
 import { normalizeWord } from './normalize'
 
 const BASE_URL = 'https://api.dictionaryapi.dev/api/v2/entries/en'
@@ -35,12 +35,19 @@ export async function fetchDictionaryWord(word: string) {
     // found (rather than a 200 with an empty array). For a sync job that
     // iterates over many candidate words, "word not found" is an expected,
     // non-exceptional outcome, so we treat it as such and return null.
-    // Any other failure (network error, timeout, 5xx, etc.) propagates so
-    // callers can distinguish real failures from "not found".
     if (error instanceof HttpError && error.status === 404) {
       return null
     }
-    throw error
+    // The free API's rate limiter kicks in quickly when iterating over many
+    // words back-to-back. Give it one bounded retry after a short backoff;
+    // if it 429s again (or any other error occurs), propagate as usual so
+    // the caller's existing error counting handles it.
+    if (error instanceof HttpError && error.status === 429) {
+      await sleep(1000)
+      data = await fetchJson<DictionaryApiResponse>(url)
+    } else {
+      throw error
+    }
   }
 
   const first = data[0]
