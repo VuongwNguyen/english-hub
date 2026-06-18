@@ -15,7 +15,10 @@
     "sync:tasks:seed": "tsx --env-file=.env.local src/server/run-seed-sync-tasks.ts",
     "sync:tasks:run": "tsx --env-file=.env.local src/server/run-sync-worker.ts",
     "generate:lessons": "tsx --env-file=.env.local src/server/run-generate-lessons.ts",
-    "data:bootstrap": "yarn sync:sources && yarn sync:words && yarn sync:sentences && yarn generate:lessons"
+    "data:bootstrap:tasks": "yarn sync:sources && yarn sync:tasks:seed && yarn sync:tasks:run && yarn generate:lessons",
+    "sync:until-done": "./scripts/sync-until-done.sh",
+    "sync:until-done:aggressive": "SYNC_MODE=aggressive SYNC_WORKER_BATCH_SIZE=150 SYNC_WORKER_CONCURRENCY=5 ./scripts/sync-until-done.sh",
+    "sync:until-done:safe": "SYNC_MODE=normal SYNC_WORKER_BATCH_SIZE=20 SYNC_WORKER_CONCURRENCY=1 ./scripts/sync-until-done.sh"
   },
   "dependencies": {
     "mongoose": "^9.7.0",
