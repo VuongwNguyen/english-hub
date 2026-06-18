@@ -94,4 +94,4 @@ ExampleSentenceSchema.index({ isActive: 1 })
 
 export const ExampleSentence =
   models.ExampleSentence ||
-  model('ExampleSentence', ExampleSentenceSchema)
+  model('ExampleSentence', ExampleSentenceSchema, 'example_sentences')

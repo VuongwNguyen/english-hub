@@ -58,4 +58,4 @@ ApiSyncRunSchema.index({ jobName: 1, createdAt: -1 })
 ApiSyncRunSchema.index({ status: 1, createdAt: -1 })
 
 export const ApiSyncRun =
-  models.ApiSyncRun || model('ApiSyncRun', ApiSyncRunSchema)
+  models.ApiSyncRun || model('ApiSyncRun', ApiSyncRunSchema, 'api_sync_runs')

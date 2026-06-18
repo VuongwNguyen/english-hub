@@ -41,4 +41,5 @@ const ExternalSourceSchema = new Schema(
 ExternalSourceSchema.index({ key: 1 }, { unique: true })
 
 export const ExternalSource =
-  models.ExternalSource || model('ExternalSource', ExternalSourceSchema)
+  models.ExternalSource ||
+  model('ExternalSource', ExternalSourceSchema, 'external_sources')
