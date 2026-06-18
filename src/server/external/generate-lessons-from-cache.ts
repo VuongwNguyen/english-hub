@@ -4,6 +4,7 @@ import { Word } from '@/models/Word'
 import { ExampleSentence } from '@/models/ExampleSentence'
 import { Lesson } from '@/models/Lesson'
 import { listeningLessons } from '@/server/data/listening-lessons'
+import { topicTaxonomy } from '@/server/data/topic-taxonomy'
 import { toSlug } from './normalize'
 
 export async function generateLessonsFromCachedData() {
@@ -81,6 +82,7 @@ async function generateVocabLessons() {
       .join('\n')
 
     const slug = `vocab-${toSlug(topic)}`
+    const topicGroup = (words[0] as any)?.topicGroups?.[0] ?? 'general'
 
     const result = await Lesson.updateOne(
       { slug },
@@ -89,6 +91,7 @@ async function generateVocabLessons() {
           slug,
           title: `Vocabulary pack: ${topic}`,
           topic,
+          topicGroup,
           level: 'A2',
           type: 'vocab',
           content,
@@ -145,6 +148,7 @@ async function generateSentenceLessons() {
     ].join('\n')
 
     const slug = `dev-english-sentences-${toSlug(topic)}`
+    const topicGroup = (sentences[0] as any)?.topicGroups?.[0] ?? 'general'
 
     const result = await Lesson.updateOne(
       { slug },
@@ -153,6 +157,7 @@ async function generateSentenceLessons() {
           slug,
           title: `Sentence practice: ${topic}`,
           topic,
+          topicGroup,
           level: 'A2',
           type: 'dev_english',
           content,
@@ -183,12 +188,12 @@ async function generateSentenceLessons() {
 }
 
 async function generateSpeakingLessons() {
-  const topics = ['debugging', 'api', 'deployment', 'testing', 'meeting', 'daily']
-
   let inserted = 0
   let updated = 0
 
-  for (const topic of topics) {
+  for (const topicItem of topicTaxonomy) {
+    const topic = topicItem.key
+    const topicGroup = topicItem.group
     const slug = `speaking-${toSlug(topic)}`
 
     const content = [
@@ -204,6 +209,7 @@ async function generateSpeakingLessons() {
           slug,
           title: `Speaking prompt: ${topic}`,
           topic,
+          topicGroup,
           level: 'A2',
           type: 'speaking',
           content,
@@ -234,12 +240,12 @@ async function generateSpeakingLessons() {
 }
 
 async function generateWritingLessons() {
-  const topics = ['debugging', 'api', 'deployment', 'testing', 'meeting', 'daily']
-
   let inserted = 0
   let updated = 0
 
-  for (const topic of topics) {
+  for (const topicItem of topicTaxonomy) {
+    const topic = topicItem.key
+    const topicGroup = topicItem.group
     const slug = `writing-${toSlug(topic)}`
 
     const content = [
@@ -256,6 +262,7 @@ async function generateWritingLessons() {
           slug,
           title: `Writing prompt: ${topic}`,
           topic,
+          topicGroup,
           level: 'A2',
           type: 'writing',
           content,

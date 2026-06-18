@@ -38,11 +38,57 @@ async function getRecentLessonIds(today: string, days = 7) {
   return Array.from(ids)
 }
 
+async function getRecentTopicGroups(today: string, days = 7) {
+  const range = getDateRangeForLastDays(today, days)
+
+  const recentPlans = await DailyPlan.find({
+    date: {
+      $gte: range.from,
+      $lt: today,
+    },
+  }).lean()
+
+  const ids = new Set<string>()
+
+  for (const plan of recentPlans) {
+    for (const item of plan.items ?? []) {
+      if (item.lessonId) {
+        ids.add(item.lessonId.toString())
+      }
+    }
+  }
+
+  const validIds = Array.from(ids).filter((id) => Types.ObjectId.isValid(id))
+
+  const lessons = await Lesson.find(
+    { _id: { $in: validIds.map((id) => new Types.ObjectId(id)) } },
+    { topicGroup: 1 }
+  ).lean()
+
+  const topicGroups = new Set<string>()
+
+  for (const lesson of lessons) {
+    if (lesson.topicGroup) {
+      topicGroups.add(lesson.topicGroup)
+    }
+  }
+
+  return Array.from(topicGroups)
+}
+
+function randomPick<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)]
+}
+
 /**
  * Lesson rotation fallback chain:
- * 1. Prefer active lessons not used in last 7 days (random sample).
+ * 1. Prefer active lessons not used in last 7 days, avoiding the topicGroups
+ *    used in the last 3 recent plans, ordered by least-used/highest-quality
+ *    first, then pick a uniformly random lesson from that shortlist.
  * 2. If no fresh lesson exists, pick active lesson with lowest useCount
- *    and oldest lastUsedAt/createdAt.
+ *    and oldest lastUsedAt/createdAt (topicGroup is NOT filtered here —
+ *    diversity is a soft preference, not a hard requirement, and this
+ *    escape valve's job is to always return something).
  * 3. If no lesson exists at all for a type, use the virtual built-in
  *    fallback (never persisted as a real Lesson document).
  *
@@ -54,24 +100,27 @@ async function getRecentLessonIds(today: string, days = 7) {
  * "recently used" set is also semantically correct: a virtual fallback
  * was never really "used up" from the real lesson pool.
  */
-async function pickLesson(type: string, excludeIds: string[]) {
+async function pickLesson(
+  type: string,
+  excludeIds: string[],
+  recentTopicGroups: string[]
+) {
   const validExcludeIds = excludeIds.filter((id) => Types.ObjectId.isValid(id))
 
-  const freshCandidates = await Lesson.aggregate([
-    {
-      $match: {
-        type,
-        isActive: true,
-        _id: {
-          $nin: validExcludeIds.map((id) => new Types.ObjectId(id)),
-        },
-      },
+  const freshCandidates = await Lesson.find({
+    type,
+    isActive: true,
+    _id: {
+      $nin: validExcludeIds.map((id) => new Types.ObjectId(id)),
     },
-    { $sample: { size: 1 } },
-  ])
+    topicGroup: { $nin: recentTopicGroups.slice(0, 3) },
+  })
+    .sort({ useCount: 1, qualityScore: -1, lastUsedAt: 1 })
+    .limit(20)
+    .lean()
 
-  if (freshCandidates[0]) {
-    return freshCandidates[0]
+  if (freshCandidates.length > 0) {
+    return randomPick(freshCandidates)
   }
 
   const leastUsed = await Lesson.findOne({
@@ -80,6 +129,7 @@ async function pickLesson(type: string, excludeIds: string[]) {
   })
     .sort({
       useCount: 1,
+      qualityScore: -1,
       lastUsedAt: 1,
       createdAt: 1,
     })
@@ -145,11 +195,12 @@ export async function getOrCreateTodayPlan(date: string) {
   }
 
   const recentLessonIds = await getRecentLessonIds(date, 7)
+  const recentTopicGroups = await getRecentTopicGroups(date, 7)
 
   const selectedLessons = []
 
   for (const type of DAILY_TYPES) {
-    const lesson = await pickLesson(type, recentLessonIds)
+    const lesson = await pickLesson(type, recentLessonIds, recentTopicGroups)
     selectedLessons.push(lesson)
   }
 

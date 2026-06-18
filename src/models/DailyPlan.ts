@@ -65,7 +65,6 @@ const DailyPlanSchema = new Schema(
     date: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     theme: {

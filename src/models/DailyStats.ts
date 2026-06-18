@@ -5,7 +5,6 @@ const DailyStatsSchema = new Schema(
     date: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     totalItems: {

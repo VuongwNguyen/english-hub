@@ -73,6 +73,10 @@ const WordSchema = new Schema(
       type: [String],
       default: [],
     },
+    topicGroups: {
+      type: [String],
+      default: [],
+    },
     sourceNames: {
       type: [String],
       default: [],
@@ -95,6 +99,7 @@ const WordSchema = new Schema(
 
 WordSchema.index({ normalizedWord: 1 }, { unique: true })
 WordSchema.index({ topics: 1 })
+WordSchema.index({ topicGroups: 1 })
 WordSchema.index({ level: 1 })
 WordSchema.index({ isActive: 1 })
 

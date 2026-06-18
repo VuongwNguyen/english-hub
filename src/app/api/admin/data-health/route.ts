@@ -6,6 +6,7 @@ import { Word } from '@/models/Word'
 import { ExampleSentence } from '@/models/ExampleSentence'
 import { ExternalSource } from '@/models/ExternalSource'
 import { ApiSyncRun } from '@/models/ApiSyncRun'
+import { SyncTask } from '@/models/SyncTask'
 
 export async function GET(request: NextRequest) {
   if (process.env.NODE_ENV === 'production') {
@@ -27,6 +28,13 @@ export async function GET(request: NextRequest) {
     sourceCount,
     latestSyncRuns,
     lessonTypeCounts,
+    lessonTopicGroupCounts,
+    wordTopicCounts,
+    wordTopicGroupCounts,
+    sentenceTopicCounts,
+    sentenceTopicGroupCounts,
+    syncTaskStatusCounts,
+    syncTaskTypeCounts,
   ] = await Promise.all([
     Lesson.countDocuments(),
     Word.countDocuments(),
@@ -41,6 +49,41 @@ export async function GET(request: NextRequest) {
         },
       },
     ]),
+    Lesson.aggregate([
+      {
+        $group: {
+          _id: '$topicGroup',
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+    ]),
+    Word.aggregate([
+      { $unwind: '$topics' },
+      { $group: { _id: '$topics', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]),
+    Word.aggregate([
+      { $unwind: '$topicGroups' },
+      { $group: { _id: '$topicGroups', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]),
+    ExampleSentence.aggregate([
+      { $unwind: '$topics' },
+      { $group: { _id: '$topics', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]),
+    ExampleSentence.aggregate([
+      { $unwind: '$topicGroups' },
+      { $group: { _id: '$topicGroups', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]),
+    SyncTask.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]),
+    SyncTask.aggregate([
+      { $group: { _id: '$type', count: { $sum: 1 } } },
+    ]),
   ])
 
   return NextResponse.json({
@@ -49,6 +92,13 @@ export async function GET(request: NextRequest) {
     sentenceCount,
     sourceCount,
     lessonTypeCounts,
+    lessonTopicGroupCounts,
+    wordTopicCounts,
+    wordTopicGroupCounts,
+    sentenceTopicCounts,
+    sentenceTopicGroupCounts,
+    syncTaskStatusCounts,
+    syncTaskTypeCounts,
     latestSyncRuns,
   })
 }

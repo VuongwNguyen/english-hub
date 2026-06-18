@@ -34,6 +34,10 @@ const ExampleSentenceSchema = new Schema(
       type: [String],
       default: [],
     },
+    topicGroups: {
+      type: [String],
+      default: [],
+    },
     level: {
       type: String,
       enum: ['A1', 'A2', 'B1', 'B2'],
@@ -89,6 +93,7 @@ ExampleSentenceSchema.index(
 ExampleSentenceSchema.index({ sourceName: 1, contentHash: 1 })
 ExampleSentenceSchema.index({ keywords: 1 })
 ExampleSentenceSchema.index({ topics: 1 })
+ExampleSentenceSchema.index({ topicGroups: 1 })
 ExampleSentenceSchema.index({ level: 1 })
 ExampleSentenceSchema.index({ isActive: 1 })
 

@@ -12,6 +12,18 @@ const LessonSchema = new Schema(
       required: true,
       trim: true,
     },
+    topicGroup: {
+      type: String,
+      default: '',
+    },
+    qualityScore: {
+      type: Number,
+      default: 0,
+    },
+    difficultyScore: {
+      type: Number,
+      default: 0,
+    },
     level: {
       type: String,
       enum: ['A1', 'A2', 'B1', 'B2'],
@@ -98,6 +110,9 @@ LessonSchema.index({ slug: 1 }, { unique: true })
 LessonSchema.index({ type: 1, isActive: 1 })
 LessonSchema.index({ useCount: 1, lastUsedAt: 1 })
 LessonSchema.index({ topic: 1 })
+LessonSchema.index({ topicGroup: 1 })
+LessonSchema.index({ type: 1, topicGroup: 1, isActive: 1 })
+LessonSchema.index({ qualityScore: -1 })
 LessonSchema.index({ createdAt: -1 })
 
 export const Lesson = models.Lesson || model('Lesson', LessonSchema)
