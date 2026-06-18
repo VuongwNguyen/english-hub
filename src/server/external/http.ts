@@ -3,6 +3,16 @@ type FetchJsonOptions = {
   headers?: Record<string, string>
 }
 
+export class HttpError extends Error {
+  status: number
+
+  constructor(status: number, url: string) {
+    super(`HTTP ${status} when fetching ${url}`)
+    this.name = 'HttpError'
+    this.status = status
+  }
+}
+
 export async function fetchJson<T>(
   url: string,
   options: FetchJsonOptions = {}
@@ -23,7 +33,7 @@ export async function fetchJson<T>(
     })
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status} when fetching ${url}`)
+      throw new HttpError(response.status, url)
     }
 
     return response.json() as Promise<T>

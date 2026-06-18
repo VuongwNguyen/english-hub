@@ -1,4 +1,4 @@
-import { fetchJson } from './http'
+import { fetchJson, HttpError } from './http'
 import { normalizeWord } from './normalize'
 
 const BASE_URL = 'https://api.dictionaryapi.dev/api/v2/entries/en'
@@ -37,7 +37,7 @@ export async function fetchDictionaryWord(word: string) {
     // non-exceptional outcome, so we treat it as such and return null.
     // Any other failure (network error, timeout, 5xx, etc.) propagates so
     // callers can distinguish real failures from "not found".
-    if (error instanceof Error && /HTTP 404/.test(error.message)) {
+    if (error instanceof HttpError && error.status === 404) {
       return null
     }
     throw error
