@@ -1,6 +1,23 @@
 import { connectMongo } from '@/lib/mongoose'
 import { Lesson } from '@/models/Lesson'
 
+// Mirrors `toSlug()` in src/server/backfill-lesson-slugs.ts (which itself
+// mirrors the not-yet-created `toSlug()` from src/server/external/normalize.ts,
+// introduced in Task B3). Kept as a local helper here so seed.ts has no
+// dependency on that module until it exists.
+function toSlug(input: string) {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+function withSlug<T extends { type: string; title: string }>(lesson: T): T & { slug: string } {
+  return { ...lesson, slug: toSlug(`${lesson.type}-${lesson.title}`) }
+}
+
 const lessons = [
   {
     title: 'Debugging phrases',
@@ -64,7 +81,7 @@ const lessons = [
     estimatedMinutes: 5,
     wordsCount: 5,
   },
-]
+].map(withSlug)
 
 export async function seedLessons() {
   await connectMongo()
@@ -106,7 +123,7 @@ function generateLessons() {
     speakingMinutes: 0,
     writingSentences: 0,
     isActive: true,
-  }))
+  })).map(withSlug)
 
   const vocabTopics = [
     'debugging',
@@ -138,7 +155,7 @@ function generateLessons() {
     speakingMinutes: 0,
     writingSentences: 0,
     isActive: true,
-  }))
+  })).map(withSlug)
 
   const speaking = Array.from({ length: 20 }).map((_, index) => ({
     title: `Speaking Prompt ${index + 1}`,
@@ -152,7 +169,7 @@ function generateLessons() {
     speakingMinutes: 1,
     writingSentences: 0,
     isActive: true,
-  }))
+  })).map(withSlug)
 
   const writing = Array.from({ length: 20 }).map((_, index) => ({
     title: `Writing Prompt ${index + 1}`,
@@ -170,7 +187,7 @@ function generateLessons() {
     speakingMinutes: 0,
     writingSentences: 3,
     isActive: true,
-  }))
+  })).map(withSlug)
 
   const devEnglish = Array.from({ length: 20 }).map((_, index) => ({
     title: `Dev English ${index + 1}`,
@@ -189,7 +206,7 @@ function generateLessons() {
     speakingMinutes: 0,
     writingSentences: 0,
     isActive: true,
-  }))
+  })).map(withSlug)
 
   return [...lessons, ...listening, ...vocab, ...speaking, ...writing, ...devEnglish]
 }
