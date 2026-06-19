@@ -19,6 +19,31 @@
  *   - low completion rate (DailyPlan item status !== 'completed'/'done')
  *   - recently failed evaluation (LessonEvaluation.status === 'needs_retry'
  *     or passed === false), which also flags `needsRetry: true`
+ *   - low engagement (LearningSession.progressPercent stuck low on
+ *     sessions that were nonetheless touched recently) — see note below
+ *
+ * Section 9.5 of the redesign doc lists four sources: DailyStats,
+ * LearningSession, LessonEvaluation, DailyPlan history. DailyStats is
+ * deliberately NOT used here: it is a single aggregate document per date
+ * (totalItems/doneItems/skippedItems/minutesSpent/activeSeconds) with no
+ * per-lessonType breakdown (see src/models/DailyStats.ts), so it cannot
+ * supply a per-skill signal at all.
+ *
+ * LearningSession IS used (added below). Its `status` field
+ * ('active'/'completed'/'abandoned') is NOT used for this, despite the enum
+ * including 'abandoned': checked every write path (tracking.ts,
+ * evaluate-item.ts) and neither one ever sets status away from its
+ * insert-time default of 'active', so `status === 'abandoned'` is always
+ * false in this codebase today — using it would be dead-code-shaped
+ * compliance, not a real signal. Instead we use `progressPercent`, which
+ * tracking.ts genuinely updates per lessonType (computeProgressPercent in
+ * tracking.ts: audio % for listening, word/practice counts for vocab, etc).
+ * A session that has been active for a while (lastActiveAt in the lookback
+ * window) but is still stuck below LOW_PROGRESS_THRESHOLD and never
+ * reached 'completed' status is a real "started but struggled/disengaged"
+ * proxy for that lessonType, separate from the DailyPlan-item skip/complete
+ * signal (a session can exist with low progress even while its plan item
+ * is still 'in_progress', i.e. before any skip/complete transition fires).
  *
  * Returns an empty list (graceful no-op) when there is not enough history
  * yet — this is what keeps fresh-DB / new-user rotation behavior
@@ -28,6 +53,7 @@ import { connectMongo } from '@/lib/mongoose'
 import { getDateRangeForLastDays } from '@/lib/date'
 import { DailyPlan } from '@/models/DailyPlan'
 import { LessonEvaluation } from '@/models/LessonEvaluation'
+import { LearningSession } from '@/models/LearningSession'
 
 export type LessonType =
   | 'listening'
@@ -46,6 +72,8 @@ export type WeakSkillSignal = {
   needsRetry: boolean
   /** Lesson ids from recent failed evaluations for this type, most recent first. */
   recentFailedLessonIds: string[]
+  /** Share of recent sessions stuck below LOW_PROGRESS_THRESHOLD, or null if no sessions. */
+  lowEngagementRate: number | null
 }
 
 export type PersonalizationSignal = {
@@ -64,6 +92,11 @@ export type PersonalizationSignal = {
 const LOOKBACK_DAYS = 14
 const MIN_EVALUATIONS_FOR_SIGNAL = 3
 const MIN_PLAN_ITEMS_FOR_SIGNAL = 3
+const MIN_SESSIONS_FOR_SIGNAL = 3
+
+// A session below this progressPercent that never reached 'completed'
+// status counts as "low engagement" for its lessonType.
+const LOW_PROGRESS_THRESHOLD = 30
 
 // Treat as "weak" once weaknessScore crosses this floor — keeps very mild
 // signal from constantly nudging rotation around for users who are doing
@@ -77,9 +110,9 @@ function isDone(status: string | null | undefined): boolean {
 /**
  * Computes weak-skill / performance signal from recent app history.
  *
- * Looks at LessonEvaluation and DailyPlan records from the last
- * LOOKBACK_DAYS days (exclusive of `today`, matching the convention used by
- * src/server/rotation.ts's getRecentLessonIds/getRecentTopicGroups).
+ * Looks at LessonEvaluation, DailyPlan, and LearningSession records from the
+ * last LOOKBACK_DAYS days (exclusive of `today`, matching the convention
+ * used by src/server/rotation.ts's getRecentLessonIds/getRecentTopicGroups).
  *
  * Pure read — does not mutate anything. Callers (rotation.ts) decide what
  * to do with the result.
@@ -91,18 +124,22 @@ export async function computePersonalizationSignal(
 
   const range = getDateRangeForLastDays(today, LOOKBACK_DAYS)
 
-  const [evaluations, recentPlans] = await Promise.all([
+  const [evaluations, recentPlans, recentSessions] = await Promise.all([
     LessonEvaluation.find({
       dateKey: { $gte: range.from, $lt: today },
     }).lean(),
     DailyPlan.find({
       date: { $gte: range.from, $lt: today },
     }).lean(),
+    LearningSession.find({
+      dateKey: { $gte: range.from, $lt: today },
+    }).lean(),
   ])
 
   if (
     evaluations.length < MIN_EVALUATIONS_FOR_SIGNAL &&
-    recentPlans.length === 0
+    recentPlans.length === 0 &&
+    recentSessions.length === 0
   ) {
     return { hasData: false, weakSkills: [], averageScoreByType: {} }
   }
@@ -115,6 +152,8 @@ export async function computePersonalizationSignal(
       totalItems: number
       skippedItems: number
       completedItems: number
+      totalSessions: number
+      lowEngagementSessions: number
     }
   >()
 
@@ -127,6 +166,8 @@ export async function computePersonalizationSignal(
         totalItems: 0,
         skippedItems: 0,
         completedItems: 0,
+        totalSessions: 0,
+        lowEngagementSessions: 0,
       })
     }
     return byType.get(key)!
@@ -157,6 +198,19 @@ export async function computePersonalizationSignal(
     }
   }
 
+  for (const session of recentSessions) {
+    const entry = bucket(session.lessonType)
+    entry.totalSessions += 1
+
+    const lowEngagement =
+      session.status !== 'completed' &&
+      (session.progressPercent ?? 0) < LOW_PROGRESS_THRESHOLD
+
+    if (lowEngagement) {
+      entry.lowEngagementSessions += 1
+    }
+  }
+
   const averageScoreByType: Partial<Record<LessonType, number>> = {}
   const weakSkills: WeakSkillSignal[] = []
 
@@ -176,16 +230,26 @@ export async function computePersonalizationSignal(
     const completionRate =
       entry.totalItems > 0 ? entry.completedItems / entry.totalItems : null
 
+    const lowEngagementRate =
+      entry.totalSessions > 0
+        ? entry.lowEngagementSessions / entry.totalSessions
+        : null
+
     const hasEnoughSignal =
       entry.scores.length >= MIN_EVALUATIONS_FOR_SIGNAL ||
-      entry.totalItems >= MIN_PLAN_ITEMS_FOR_SIGNAL
+      entry.totalItems >= MIN_PLAN_ITEMS_FOR_SIGNAL ||
+      entry.totalSessions >= MIN_SESSIONS_FOR_SIGNAL
 
     if (!hasEnoughSignal) continue
 
     // Weakness score: blends low average score, high skip rate, low
-    // completion rate, and recent failures into a single 0-100 metric
-    // (higher = weaker). Each component is optional (some may have no
-    // data), so we average over whichever components are available.
+    // completion rate, low engagement, and recent failures into a single
+    // 0-100 metric (higher = weaker). Each component is optional (some may
+    // have no data), so we average over whichever components are
+    // available. lowEngagementRate is only included when there are enough
+    // sessions to be meaningful (same MIN_SESSIONS_FOR_SIGNAL bar used for
+    // hasEnoughSignal above), so a single low-progress session doesn't
+    // swing the score.
     const components: number[] = []
 
     if (averageScore !== null) {
@@ -196,6 +260,12 @@ export async function computePersonalizationSignal(
     }
     if (completionRate !== null) {
       components.push((1 - completionRate) * 100)
+    }
+    if (
+      lowEngagementRate !== null &&
+      entry.totalSessions >= MIN_SESSIONS_FOR_SIGNAL
+    ) {
+      components.push(lowEngagementRate * 100)
     }
     if (entry.failedLessonIds.length > 0) {
       components.push(100)
@@ -216,6 +286,7 @@ export async function computePersonalizationSignal(
       completionRate,
       needsRetry: entry.failedLessonIds.length > 0,
       recentFailedLessonIds: entry.failedLessonIds,
+      lowEngagementRate,
     })
   }
 
