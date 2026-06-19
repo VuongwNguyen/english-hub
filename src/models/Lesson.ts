@@ -100,6 +100,23 @@ const LessonSchema = new Schema(
       type: Date,
       default: null,
     },
+    // --- Phase 5 personalization fields (section 9.2) ---
+    // Additive-only optional fields. Existing documents simply have these
+    // as undefined/absent until a write path (seed, generation, or the
+    // reviewPriority increment below) sets them — no backfill required.
+    topics: {
+      type: [String],
+      default: undefined,
+    },
+    targetSkills: {
+      type: [String],
+      enum: ['listening', 'vocab', 'speaking', 'writing', 'dev_english'],
+      default: undefined,
+    },
+    reviewPriority: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
@@ -114,5 +131,6 @@ LessonSchema.index({ topicGroup: 1 })
 LessonSchema.index({ type: 1, topicGroup: 1, isActive: 1 })
 LessonSchema.index({ qualityScore: -1 })
 LessonSchema.index({ createdAt: -1 })
+LessonSchema.index({ reviewPriority: -1 })
 
 export const Lesson = models.Lesson || model('Lesson', LessonSchema)

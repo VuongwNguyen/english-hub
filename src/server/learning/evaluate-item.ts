@@ -36,6 +36,7 @@ import {
   type LessonType,
 } from '@/server/learning/evaluation'
 import { isCompletionRuleSatisfied } from '@/server/learning/completion'
+import { bumpLessonReviewPriority } from '@/server/rotation'
 
 export class EvaluateItemError extends Error {
   status: number
@@ -138,6 +139,17 @@ export async function evaluateItem({
     },
     { upsert: true, new: true }
   )
+
+  // Section 9.7: a failed evaluation should increase reviewPriority on the
+  // related lesson so it's more likely to resurface for retry practice.
+  // Fire on every failed evaluate call (not just the first), matching the
+  // spec's "recently failed evaluation" framing — repeated failures should
+  // keep nudging priority up. This is independent of the idempotent
+  // LessonEvaluation upsert above (that record reflects only the latest
+  // attempt; reviewPriority is a cumulative counter).
+  if (!passed) {
+    await bumpLessonReviewPriority(item.lessonId)
+  }
 
   // Decide completion by combining tracking progress (session metrics) with
   // the evaluation outcome.
