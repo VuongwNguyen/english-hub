@@ -201,36 +201,51 @@ export function SpeakingLessonView({
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
 
-      const recorder = new MediaRecorder(stream)
-      mediaRecorderRef.current = recorder
-      recorder.start()
+      try {
+        const recorder = new MediaRecorder(stream)
+        mediaRecorderRef.current = recorder
+        recorder.start()
 
-      const nextAttemptCount = attemptCountRef.current + 1
-      attemptCountRef.current = nextAttemptCount
-      setSpeechAttemptCount(nextAttemptCount)
-      setTranscript('')
-      setRecordedSeconds(0)
-      setRecorderState('recording')
+        const nextAttemptCount = attemptCountRef.current + 1
+        attemptCountRef.current = nextAttemptCount
+        setSpeechAttemptCount(nextAttemptCount)
+        setTranscript('')
+        setRecordedSeconds(0)
+        setRecorderState('recording')
 
-      recordingStartedAtRef.current = Date.now()
-      onTrackingEvent('interaction', {})
+        recordingStartedAtRef.current = Date.now()
+        onTrackingEvent('interaction', {})
 
-      intervalRef.current = setInterval(() => {
-        const elapsedSeconds = Math.floor(
-          (Date.now() - recordingStartedAtRef.current) / 1000
-        )
-        setRecordedSeconds(elapsedSeconds)
-        onTrackingEvent('record_progress', {
-          recordedSeconds: elapsedSeconds,
-          speechAttemptCount: nextAttemptCount,
-        })
-      }, RECORD_PROGRESS_INTERVAL_MS)
+        intervalRef.current = setInterval(() => {
+          const elapsedSeconds = Math.floor(
+            (Date.now() - recordingStartedAtRef.current) / 1000
+          )
+          setRecordedSeconds(elapsedSeconds)
+          onTrackingEvent('record_progress', {
+            recordedSeconds: elapsedSeconds,
+            speechAttemptCount: nextAttemptCount,
+          })
+        }, RECORD_PROGRESS_INTERVAL_MS)
 
-      startSpeechRecognitionIfAvailable()
+        startSpeechRecognitionIfAvailable()
+      } catch (setupError) {
+        // The mic stream was acquired but something after that (constructing
+        // the MediaRecorder, calling .start(), or attaching handlers) threw.
+        // The stream is real and live at this point, so it must be stopped
+        // here — falling through to the getUserMedia catch below without
+        // this would leave the mic indicator on with no recording in
+        // progress and no way for the user to stop it.
+        stopMicTracks()
+        throw setupError
+      }
     } catch (error) {
-      // Permission denied, no device found, or any other getUserMedia
-      // failure: never crash. Offer the calm fallback message + text input
-      // so the learner can still attempt the practice.
+      // Permission denied, no device found, any other getUserMedia failure,
+      // or a re-thrown setup error from the inner try (mic tracks already
+      // stopped by stopMicTracks() above in that case): never crash. Offer
+      // the calm fallback message + text input so the learner can still
+      // attempt the practice. The refs are already null when stopMicTracks()
+      // ran; reset here too so the getUserMedia-failure path (which never
+      // touched the refs) ends up in the same clean state.
       streamRef.current = null
       mediaRecorderRef.current = null
       setRecorderState('idle')
