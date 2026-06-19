@@ -1,11 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { AppShell } from '@/components/AppShell'
 import { DailySummary } from '@/components/learning/DailySummary'
 import type { DailyPlanDTO } from '@/types/english'
 
+function isPlanAllDone(plan: DailyPlanDTO): boolean {
+  return plan.items.every(
+    (item) => item.status === 'completed' || item.status === 'skipped',
+  )
+}
+
 export default function TodaySummaryPage() {
+  const router = useRouter()
   const [plan, setPlan] = useState<DailyPlanDTO | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -35,6 +43,16 @@ export default function TodaySummaryPage() {
       active = false
     }
   }, [])
+
+  useEffect(() => {
+    if (!loading && plan && !isPlanAllDone(plan)) {
+      router.replace('/today')
+    }
+  }, [loading, plan, router])
+
+  if (!loading && plan && !isPlanAllDone(plan)) {
+    return null
+  }
 
   return (
     <AppShell>
