@@ -1,3 +1,4 @@
+import { computeActiveMinutes } from '@/lib/lesson-labels'
 import type { DailyPlanItemDTO, TodayProgress } from '@/types/english'
 import { ContinueLearningButton } from './ContinueLearningButton'
 
@@ -8,11 +9,7 @@ type Props = {
 }
 
 export function DailyProgressHero({ progress, items, theme }: Props) {
-  const activeSeconds = items.reduce(
-    (total, item) => total + (item.activeSeconds ?? 0),
-    0,
-  )
-  const activeMinutes = Math.round(activeSeconds / 60)
+  const activeMinutes = computeActiveMinutes(items)
 
   const completedCount = progress.done
   const totalCount = progress.total

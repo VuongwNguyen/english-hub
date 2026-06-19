@@ -3,19 +3,12 @@
 import Link from 'next/link'
 import { EmptyState } from '@/components/EmptyState'
 import { LoadingState } from '@/components/LoadingState'
-import type { DailyPlanDTO, DailyPlanItemDTO } from '@/types/english'
+import { computeActiveMinutes, LESSON_TYPE_LABELS } from '@/lib/lesson-labels'
+import type { DailyPlanDTO } from '@/types/english'
 
 type Props = {
   plan: DailyPlanDTO | null
   loading: boolean
-}
-
-const TYPE_LABELS: Record<DailyPlanItemDTO['type'], string> = {
-  listening: 'Listening',
-  vocab: 'Vocabulary',
-  speaking: 'Speaking',
-  writing: 'Writing',
-  dev_english: 'Dev English',
 }
 
 /**
@@ -40,11 +33,7 @@ export function DailySummary({ plan, loading }: Props) {
     )
   }
 
-  const activeSeconds = plan.items.reduce(
-    (total, item) => total + (item.activeSeconds ?? 0),
-    0,
-  )
-  const activeMinutes = Math.round(activeSeconds / 60)
+  const activeMinutes = computeActiveMinutes(plan.items)
 
   const completedItems = plan.items.filter((item) => item.status === 'completed')
 
@@ -75,7 +64,7 @@ export function DailySummary({ plan, loading }: Props) {
                   <span className="text-accent" aria-hidden="true">
                     ✓
                   </span>
-                  {TYPE_LABELS[item.type]}
+                  {LESSON_TYPE_LABELS[item.type]}
                 </li>
               ))}
             </ul>

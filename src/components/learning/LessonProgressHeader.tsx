@@ -1,18 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import { LESSON_TYPE_LABELS } from '@/lib/lesson-labels'
 import type { DailyPlanItemDTO } from '@/types/english'
 
 type Props = {
   item: DailyPlanItemDTO
-}
-
-const TYPE_LABELS: Record<DailyPlanItemDTO['type'], string> = {
-  listening: 'Listening',
-  vocab: 'Vocabulary',
-  speaking: 'Speaking',
-  writing: 'Writing',
-  dev_english: 'Dev English',
 }
 
 export function LessonProgressHeader({ item }: Props) {
@@ -29,7 +22,7 @@ export function LessonProgressHeader({ item }: Props) {
 
       <div className="flex items-center gap-3 sm:flex-1 sm:justify-end">
         <p className="text-xs uppercase tracking-[0.25em] text-gold">
-          {TYPE_LABELS[item.type]} · {percent}%
+          {LESSON_TYPE_LABELS[item.type]} · {percent}%
         </p>
 
         <div className="h-1.5 w-24 overflow-hidden rounded-full bg-surface-soft">

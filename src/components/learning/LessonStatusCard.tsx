@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { LESSON_TYPE_LABELS } from '@/lib/lesson-labels'
 import type { DailyPlanItemDTO } from '@/types/english'
 
 type Props = {
@@ -16,14 +17,6 @@ const TYPE_ICONS: Record<DailyPlanItemDTO['type'], string> = {
   speaking: '🗣️',
   writing: '✍️',
   dev_english: '💻',
-}
-
-const TYPE_LABELS: Record<DailyPlanItemDTO['type'], string> = {
-  listening: 'Listening',
-  vocab: 'Vocabulary',
-  speaking: 'Speaking',
-  writing: 'Writing',
-  dev_english: 'Dev English',
 }
 
 const STATUS_BADGE: Record<DailyPlanItemDTO['status'], string> = {
@@ -53,7 +46,7 @@ export function LessonStatusCard({ item, isLoading, onSkip, onUndo }: Props) {
 
           <div>
             <p className="text-xs uppercase tracking-[0.25em] text-gold">
-              {TYPE_LABELS[item.type]}
+              {LESSON_TYPE_LABELS[item.type]}
             </p>
 
             <h3 className="mt-1 font-display text-lg font-medium text-ink">
