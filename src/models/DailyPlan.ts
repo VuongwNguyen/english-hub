@@ -47,6 +47,11 @@ const DailyPlanItemSchema = new Schema(
     },
     status: {
       type: String,
+      // Note: legacy documents persisted before this enum was tightened may
+      // still have status: 'done' on disk (Mongoose only validates on
+      // write, not read), which would fail validation on a bare re-save.
+      // See isItemDone() in src/server/learning/progress.ts for why 'done'
+      // is treated as equivalent to 'completed' everywhere it matters.
       enum: ['pending', 'in_progress', 'completed', 'skipped'],
       default: 'pending',
     },

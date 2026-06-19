@@ -13,7 +13,11 @@ export function serializeDailyPlan(plan: any) {
     wordsCount: item.wordsCount,
     speakingMinutes: item.speakingMinutes,
     writingSentences: item.writingSentences,
-    status: item.status,
+    // Legacy DailyPlan documents may still have status: 'done' persisted on
+    // disk (Mongoose only validates on write, not read). Normalize it to
+    // 'completed' here so the DTO's status always conforms to the real
+    // ItemStatus union the client expects.
+    status: isItemDone(item.status) ? 'completed' : item.status,
     startedAt: item.startedAt ? item.startedAt.toISOString() : null,
     completedAt: item.completedAt ? item.completedAt.toISOString() : null,
     skippedAt: item.skippedAt ? item.skippedAt.toISOString() : null,
