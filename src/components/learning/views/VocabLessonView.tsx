@@ -119,7 +119,12 @@ export function VocabLessonView({
 
       <div className="mt-4 flex items-center justify-between text-xs text-ink-soft">
         <span>
-          {practiceCount} / {Math.max(entries.length, PRACTICE_GOAL)} practiced
+          {/* Display denominator is whichever is smaller: practicing every
+              available word, or hitting PRACTICE_GOAL. This only affects the
+              label — completion.ts's actual pass threshold (practiceCount >=
+              PRACTICE_GOAL OR evaluation score >= 60) is unrelated and still
+              uses PRACTICE_GOAL directly. */}
+          {practiceCount} / {entries.length === 0 ? PRACTICE_GOAL : Math.min(entries.length, PRACTICE_GOAL)} practiced
         </span>
         <span>Your progress is saved automatically.</span>
       </div>
