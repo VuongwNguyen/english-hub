@@ -9,16 +9,16 @@
  * keep DailyStats in sync. The route handler stays thin and only does
  * request parsing / response shaping.
  *
- * Idempotency note (judgment call, see report): activeSecondsDelta is
- * capped at 30s per event before being applied to both the session and
- * DailyStats. This bounds the damage of any single buggy/duplicate/
- * malicious event and keeps repeated identical events from meaningfully
- * inflating stats, but it is not full duplicate-event detection (e.g. an
- * exact replay of a `start` event will not double-count activeSeconds
- * since start carries no delta, but a replayed heartbeat with a delta will
- * add that capped delta again each time it's sent). True idempotency would
- * require a per-event dedupe log (e.g. client-generated event id), which
- * is out of scope for v1 per the task's idempotency design guidance.
+ * Idempotency: the client-provided activeSecondsDelta is never trusted
+ * directly. Instead it is bounded by the actual server-side wall-clock time
+ * elapsed since the session's lastActiveAt (serverElapsedSeconds = now -
+ * lastActiveAt), and the applied delta is
+ * min(clientDelta ?? serverElapsedSeconds, serverElapsedSeconds, 30s).
+ * lastActiveAt is then advanced to `now`. A genuine heartbeat sent ~15s
+ * after the previous one contributes ~15s; an exact replay sent
+ * immediately after a prior event contributes ~0s extra, since almost no
+ * wall-clock time has passed since lastActiveAt was last updated. The 30s
+ * ceiling remains as an extra safety cap on top of the elapsed-time bound.
  */
 import { connectMongo } from '@/lib/mongoose'
 import { getVietnamTodayDate } from '@/lib/date'
@@ -170,16 +170,30 @@ export async function processTrackingEvent({
   const now = new Date()
   const safePayload = payload ?? {}
 
-  // Cap activeSecondsDelta server-side regardless of what the client sends.
-  const rawDelta = safePayload.activeSecondsDelta ?? 0
-  const activeSecondsDelta = Math.max(
-    0,
-    Math.min(MAX_ACTIVE_SECONDS_DELTA, rawDelta)
-  )
-
   // 1-2. Plan + item already found above.
   // 3. Create/get LearningSession (unique on dailyPlanId+itemId).
   const eventCountKey = EVENT_COUNT_KEY[eventType]
+
+  // Read the pre-existing session first (if any) so we can compute real
+  // wall-clock elapsed time since its lastActiveAt before that field gets
+  // overwritten. This is what makes activeSecondsDelta idempotent: a
+  // replayed event arriving right after a previous one has ~0 elapsed time
+  // to apply, regardless of what delta the client claims.
+  const existingSession = await LearningSession.findOne({
+    dailyPlanId: plan._id,
+    itemId,
+  })
+
+  const previousLastActiveAt = existingSession?.lastActiveAt ?? null
+  const serverElapsedSeconds = previousLastActiveAt
+    ? Math.max(0, (now.getTime() - previousLastActiveAt.getTime()) / 1000)
+    : MAX_ACTIVE_SECONDS_DELTA
+
+  const rawDelta = safePayload.activeSecondsDelta ?? serverElapsedSeconds
+  const activeSecondsDelta = Math.max(
+    0,
+    Math.min(rawDelta, serverElapsedSeconds, MAX_ACTIVE_SECONDS_DELTA)
+  )
 
   const upsertUpdate: Record<string, any> = {
     $set: {
@@ -288,6 +302,17 @@ export async function processTrackingEvent({
   // the in_progress transition just happened.
   await recalculateDailyStats(today)
 
+  // Separately accumulate live activeSeconds onto today's DailyStats. This
+  // uses the same elapsed-time-bounded activeSecondsDelta as the session/
+  // item updates above, so replayed events contribute ~0 here too.
+  if (activeSecondsDelta > 0) {
+    await DailyStats.findOneAndUpdate(
+      { date: today },
+      { $inc: { activeSeconds: activeSecondsDelta } },
+      { upsert: true }
+    )
+  }
+
   const stats = await DailyStats.findOne({ date: today })
 
   return {
@@ -301,6 +326,7 @@ export async function processTrackingEvent({
           skippedItems: stats.skippedItems,
           pendingItems: stats.pendingItems,
           minutesSpent: stats.minutesSpent,
+          activeSeconds: stats.activeSeconds ?? 0,
         }
       : null,
   }

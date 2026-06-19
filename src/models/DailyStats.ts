@@ -27,6 +27,10 @@ const DailyStatsSchema = new Schema(
       type: Number,
       default: 0,
     },
+    activeSeconds: {
+      type: Number,
+      default: 0,
+    },
     wordsLearned: {
       type: Number,
       default: 0,
