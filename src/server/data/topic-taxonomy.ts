@@ -805,4 +805,324 @@ export const topicTaxonomy: TopicTaxonomyItem[] = [
       'energy',
     ],
   },
+  {
+    key: 'morning_routine',
+    group: 'daily_life',
+    words: ['wake', 'breakfast', 'shower', 'commute', 'routine', 'prepare', 'schedule', 'habit'],
+  },
+  {
+    key: 'night_routine',
+    group: 'daily_life',
+    words: ['sleep', 'relax', 'dinner', 'bedtime', 'tired', 'rest', 'dream', 'quiet'],
+  },
+  {
+    key: 'home_chores',
+    group: 'daily_life',
+    words: ['clean', 'wash', 'laundry', 'sweep', 'cook', 'organize', 'trash', 'repair'],
+  },
+  {
+    key: 'personal_care',
+    group: 'daily_life',
+    words: ['haircut', 'shave', 'skin', 'bath', 'toothbrush', 'soap', 'mirror', 'hygiene'],
+  },
+  {
+    key: 'time_management',
+    group: 'daily_life',
+    words: ['deadline', 'calendar', 'schedule', 'delay', 'early', 'late', 'plan', 'priority'],
+  },
+  {
+    key: 'family_life',
+    group: 'social',
+    words: ['parent', 'child', 'sibling', 'relative', 'home', 'care', 'support', 'family'],
+  },
+  {
+    key: 'friendship',
+    group: 'social',
+    words: ['friend', 'trust', 'invite', 'hangout', 'chat', 'share', 'support', 'promise'],
+  },
+  {
+    key: 'dating_relationships',
+    group: 'social',
+    words: ['date', 'love', 'partner', 'feeling', 'relationship', 'breakup', 'trust', 'romance'],
+  },
+  {
+    key: 'conflict_resolution',
+    group: 'social',
+    words: ['argue', 'apologize', 'forgive', 'misunderstand', 'conflict', 'calm', 'listen', 'respect'],
+  },
+  {
+    key: 'small_talk',
+    group: 'communication',
+    words: ['weather', 'weekend', 'hobby', 'nice', 'meet', 'chat', 'conversation', 'question'],
+  },
+  {
+    key: 'office_life',
+    group: 'career',
+    words: ['office', 'colleague', 'meeting', 'desk', 'manager', 'email', 'report', 'task'],
+  },
+  {
+    key: 'job_interview',
+    group: 'career',
+    words: ['interview', 'resume', 'experience', 'strength', 'weakness', 'salary', 'hire', 'candidate'],
+  },
+  {
+    key: 'workplace_feedback',
+    group: 'career',
+    words: ['feedback', 'improve', 'performance', 'review', 'suggestion', 'mistake', 'growth', 'skill'],
+  },
+  {
+    key: 'remote_work',
+    group: 'career',
+    words: ['remote', 'online', 'workspace', 'meeting', 'timezone', 'focus', 'message', 'productivity'],
+  },
+  {
+    key: 'freelancing',
+    group: 'career',
+    words: ['client', 'project', 'invoice', 'contract', 'deadline', 'proposal', 'freelance', 'payment'],
+  },
+  {
+    key: 'personal_finance',
+    group: 'money',
+    words: ['budget', 'save', 'spend', 'income', 'expense', 'debt', 'invest', 'cash'],
+  },
+  {
+    key: 'banking',
+    group: 'money',
+    words: ['bank', 'account', 'transfer', 'withdraw', 'deposit', 'card', 'fee', 'balance'],
+  },
+  {
+    key: 'insurance',
+    group: 'money',
+    words: ['insurance', 'claim', 'policy', 'coverage', 'risk', 'accident', 'health', 'payment'],
+  },
+  {
+    key: 'renting_house',
+    group: 'housing',
+    words: ['rent', 'landlord', 'tenant', 'deposit', 'contract', 'room', 'apartment', 'move'],
+  },
+  {
+    key: 'buying_selling',
+    group: 'shopping',
+    words: ['buy', 'sell', 'price', 'discount', 'order', 'delivery', 'refund', 'exchange'],
+  },
+  {
+    key: 'doctor_visit',
+    group: 'health',
+    words: ['doctor', 'appointment', 'symptom', 'pain', 'medicine', 'fever', 'cough', 'clinic'],
+  },
+  {
+    key: 'mental_wellbeing',
+    group: 'health',
+    words: ['stress', 'anxiety', 'calm', 'mind', 'emotion', 'rest', 'therapy', 'balance'],
+  },
+  {
+    key: 'nutrition',
+    group: 'health',
+    words: ['food', 'diet', 'protein', 'vegetable', 'fruit', 'calorie', 'meal', 'healthy'],
+  },
+  {
+    key: 'first_aid',
+    group: 'emergency',
+    words: ['injury', 'bleeding', 'bandage', 'burn', 'help', 'emergency', 'pain', 'care'],
+  },
+  {
+    key: 'airport',
+    group: 'travel',
+    words: ['airport', 'flight', 'passport', 'luggage', 'ticket', 'boarding', 'gate', 'delay'],
+  },
+  {
+    key: 'hotel',
+    group: 'travel',
+    words: ['hotel', 'room', 'checkin', 'checkout', 'reservation', 'key', 'service', 'guest'],
+  },
+  {
+    key: 'restaurant',
+    group: 'food',
+    words: ['menu', 'order', 'dish', 'waiter', 'bill', 'taste', 'spicy', 'reservation'],
+  },
+  {
+    key: 'public_transport',
+    group: 'transportation',
+    words: ['bus', 'train', 'station', 'ticket', 'route', 'traffic', 'commute', 'arrive'],
+  },
+  {
+    key: 'directions',
+    group: 'travel',
+    words: ['direction', 'street', 'left', 'right', 'near', 'far', 'map', 'location'],
+  },
+  {
+    key: 'school_life',
+    group: 'education',
+    words: ['school', 'student', 'teacher', 'class', 'homework', 'exam', 'lesson', 'grade'],
+  },
+  {
+    key: 'university',
+    group: 'education',
+    words: ['university', 'campus', 'lecture', 'degree', 'major', 'research', 'professor', 'student'],
+  },
+  {
+    key: 'self_learning',
+    group: 'education',
+    words: ['learn', 'practice', 'study', 'habit', 'goal', 'progress', 'review', 'memory'],
+  },
+  {
+    key: 'online_learning',
+    group: 'education',
+    words: ['course', 'video', 'lesson', 'online', 'quiz', 'certificate', 'platform', 'skill'],
+  },
+  {
+    key: 'exam_preparation',
+    group: 'education',
+    words: ['exam', 'test', 'score', 'practice', 'question', 'answer', 'review', 'prepare'],
+  },
+  {
+    key: 'movies',
+    group: 'entertainment',
+    words: ['movie', 'actor', 'scene', 'story', 'cinema', 'character', 'director', 'review'],
+  },
+  {
+    key: 'music',
+    group: 'entertainment',
+    words: ['music', 'song', 'listen', 'singer', 'concert', 'melody', 'album', 'rhythm'],
+  },
+  {
+    key: 'books',
+    group: 'entertainment',
+    words: ['book', 'novel', 'chapter', 'author', 'story', 'read', 'page', 'library'],
+  },
+  {
+    key: 'games',
+    group: 'entertainment',
+    words: ['game', 'player', 'level', 'score', 'team', 'challenge', 'win', 'lose'],
+  },
+  {
+    key: 'social_media',
+    group: 'media',
+    words: ['post', 'comment', 'share', 'follow', 'profile', 'message', 'trend', 'online'],
+  },
+  {
+    key: 'community',
+    group: 'society',
+    words: ['community', 'neighbor', 'support', 'volunteer', 'local', 'event', 'help', 'group'],
+  },
+  {
+    key: 'public_service',
+    group: 'society',
+    words: ['government', 'service', 'document', 'office', 'apply', 'form', 'license', 'citizen'],
+  },
+  {
+    key: 'law_basic',
+    group: 'society',
+    words: ['law', 'rule', 'right', 'contract', 'legal', 'police', 'court', 'evidence'],
+  },
+  {
+    key: 'news_discussion',
+    group: 'media',
+    words: ['news', 'report', 'event', 'issue', 'source', 'fact', 'opinion', 'update'],
+  },
+  {
+    key: 'environment_action',
+    group: 'environment',
+    words: ['recycle', 'waste', 'plastic', 'climate', 'energy', 'pollution', 'green', 'protect'],
+  },
+  {
+    key: 'feelings',
+    group: 'emotion',
+    words: ['happy', 'sad', 'angry', 'afraid', 'excited', 'lonely', 'proud', 'nervous'],
+  },
+  {
+    key: 'decision_making',
+    group: 'thinking',
+    words: ['decide', 'choice', 'option', 'risk', 'reason', 'compare', 'select', 'judge'],
+  },
+  {
+    key: 'problem_solving',
+    group: 'thinking',
+    words: ['problem', 'solution', 'cause', 'effect', 'analyze', 'fix', 'improve', 'result'],
+  },
+  {
+    key: 'critical_thinking',
+    group: 'thinking',
+    words: ['logic', 'evidence', 'argument', 'bias', 'assumption', 'reason', 'claim', 'question'],
+  },
+  {
+    key: 'creativity',
+    group: 'thinking',
+    words: ['idea', 'create', 'design', 'imagine', 'inspire', 'art', 'original', 'experiment'],
+  },
+  {
+    key: 'email_writing',
+    group: 'communication',
+    words: ['email', 'subject', 'reply', 'request', 'confirm', 'attach', 'regards', 'followup'],
+  },
+  {
+    key: 'phone_call',
+    group: 'communication',
+    words: ['call', 'phone', 'answer', 'hold', 'message', 'speak', 'hear', 'number'],
+  },
+  {
+    key: 'presentation',
+    group: 'communication',
+    words: ['present', 'slide', 'audience', 'explain', 'topic', 'summary', 'question', 'introduce'],
+  },
+  {
+    key: 'negotiation',
+    group: 'communication',
+    words: ['negotiate', 'offer', 'agree', 'deal', 'price', 'condition', 'compromise', 'benefit'],
+  },
+  {
+    key: 'storytelling',
+    group: 'communication',
+    words: ['story', 'beginning', 'event', 'character', 'happen', 'describe', 'memory', 'ending'],
+  },
+  {
+    key: 'ai_tools',
+    group: 'technology',
+    words: ['ai', 'prompt', 'tool', 'chatbot', 'automation', 'model', 'generate', 'assistant'],
+  },
+  {
+    key: 'internet_safety',
+    group: 'technology',
+    words: ['password', 'privacy', 'account', 'scam', 'secure', 'login', 'verify', 'protect'],
+  },
+  {
+    key: 'smartphone',
+    group: 'technology',
+    words: ['phone', 'app', 'battery', 'screen', 'camera', 'message', 'notification', 'setting'],
+  },
+  {
+    key: 'computer_basics',
+    group: 'technology',
+    words: ['computer', 'file', 'folder', 'screen', 'keyboard', 'mouse', 'install', 'update'],
+  },
+  {
+    key: 'online_payment',
+    group: 'technology',
+    words: ['payment', 'wallet', 'transfer', 'card', 'checkout', 'qr', 'transaction', 'receipt'],
+  },
+  {
+    key: 'weather_events',
+    group: 'nature',
+    words: ['rain', 'storm', 'wind', 'flood', 'heat', 'cold', 'cloud', 'forecast'],
+  },
+  {
+    key: 'animals_pets',
+    group: 'nature',
+    words: ['dog', 'cat', 'pet', 'animal', 'feed', 'care', 'wild', 'friendly'],
+  },
+  {
+    key: 'plants_gardening',
+    group: 'nature',
+    words: ['plant', 'flower', 'garden', 'water', 'soil', 'grow', 'seed', 'leaf'],
+  },
+  {
+    key: 'city_life',
+    group: 'society',
+    words: ['city', 'street', 'traffic', 'building', 'crowd', 'noise', 'market', 'public'],
+  },
+  {
+    key: 'countryside',
+    group: 'society',
+    words: ['village', 'farm', 'field', 'quiet', 'river', 'nature', 'local', 'harvest'],
+  },
 ]
