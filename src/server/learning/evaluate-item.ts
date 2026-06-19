@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Orchestration for POST /api/today/items/:itemId/evaluate (Phase 3,
  * section 7.3-7.4 of docs/LEARNING_EXPERIENCE_REDESIGN_AGENT.md).
@@ -32,6 +31,7 @@ import { recalculateDailyStats } from '@/server/stats'
 import { isItemDone } from '@/server/learning/progress'
 import {
   evaluateLesson,
+  PASSING_SCORE,
   type EvaluationInput,
   type LessonType,
 } from '@/server/learning/evaluation'
@@ -91,7 +91,7 @@ export async function evaluateItem({
 
   // Run rule-based scoring (no external API calls).
   const { score, rubric, feedback } = evaluateLesson(lessonType, safeInput)
-  const passed = score >= 60
+  const passed = score >= PASSING_SCORE
 
   // Pull tracking-side numbers from the LearningSession, NOT from the
   // evaluate request body — the request `input` only supplies content to

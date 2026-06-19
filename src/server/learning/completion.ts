@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Completion-rule logic (Phase 3, section 7.4 of
  * docs/LEARNING_EXPERIENCE_REDESIGN_AGENT.md).
@@ -22,7 +21,7 @@
  *   Dev English:  score >= 60
  */
 
-import type { LessonType } from '@/server/learning/evaluation'
+import { PASSING_SCORE, type LessonType } from '@/server/learning/evaluation'
 
 export type SessionMetricsForCompletion = {
   audioProgressPercent?: number | null
@@ -42,7 +41,7 @@ export function isCompletionRuleSatisfied({
   score,
   metrics,
 }: CompletionDecisionInput): boolean {
-  const passedEvaluation = score >= 60
+  const passedEvaluation = score >= PASSING_SCORE
 
   switch (lessonType) {
     case 'listening': {

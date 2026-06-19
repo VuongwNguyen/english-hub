@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Rule-based scoring for the evaluation layer (Phase 3, section 7.3 of
  * docs/LEARNING_EXPERIENCE_REDESIGN_AGENT.md).
@@ -78,6 +77,13 @@ export type ScoringResult = {
   rubric: Rubric
   feedback: Feedback
 }
+
+/**
+ * The minimum score (out of 100) considered a "pass" for evaluation
+ * purposes. Shared across the evaluation/completion layer so the threshold
+ * only needs to change in one place.
+ */
+export const PASSING_SCORE = 60
 
 function clampScore(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)))
@@ -204,7 +210,7 @@ function evaluateListening(input: EvaluationInput): ScoringResult {
   }
 
   const summary =
-    score >= 60
+    score >= PASSING_SCORE
       ? 'Good listening. Your answers look solid.'
       : 'Good attempt. Try listening again for the details you missed.'
 
@@ -229,7 +235,7 @@ function evaluateVocab(input: EvaluationInput): ScoringResult {
     const quiz = scoreQuiz(input)
     score = clampScore(quiz.score)
 
-    if (score >= 60) {
+    if (score >= PASSING_SCORE) {
       strengths.push('You recognized the practiced words well.')
     } else {
       improvements.push('Review the word list again before the quiz.')
@@ -244,7 +250,7 @@ function evaluateVocab(input: EvaluationInput): ScoringResult {
   }
 
   const summary =
-    score >= 60
+    score >= PASSING_SCORE
       ? 'Nice work reviewing your vocabulary.'
       : 'Good attempt. A bit more practice will help these stick.'
 
@@ -299,13 +305,13 @@ function evaluateSpeaking(input: EvaluationInput): ScoringResult {
   score = clampScore(score)
 
   const summary =
-    score >= 60
+    score >= PASSING_SCORE
       ? 'Good attempt. You spoke long enough.'
       : 'Good attempt. Try this next time: speak a little longer.'
 
   return {
     score,
-    rubric: { completion: score, clarity: score, pronunciation: null as any },
+    rubric: { completion: score, clarity: score },
     feedback: { summary, strengths, improvements },
   }
 }
@@ -360,7 +366,7 @@ function evaluateWrittenText(input: EvaluationInput): ScoringResult {
   }
 
   const summary =
-    score >= 60
+    score >= PASSING_SCORE
       ? 'Good work. Your answer is clear enough.'
       : 'Good attempt. A little more detail will help.'
 
