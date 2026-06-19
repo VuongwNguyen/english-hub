@@ -12,10 +12,8 @@ type Props = {
  * Priority logic (spec 5.3):
  * 1. First item with status `in_progress`.
  * 2. Else first `pending` item.
- * 3. Else (all completed/skipped) — there is no daily summary route yet
- *    (that's a later task), so we disable the button and show a calm
- *    "All done for today" label instead of linking to a route that
- *    doesn't exist.
+ * 3. Else (all completed/skipped) — go to the daily summary (/today/summary,
+ *    section 5.5) instead of disabling the button.
  */
 function findNextItem(items: DailyPlanItemDTO[]) {
   return (
@@ -32,10 +30,10 @@ export function ContinueLearningButton({ items, className }: Props) {
   if (!nextItem) {
     return (
       <button
-        disabled
-        className={`rounded-full bg-surface-soft px-6 py-3 text-sm font-medium text-muted ${className ?? ''}`}
+        onClick={() => router.push('/today/summary')}
+        className={`rounded-full bg-accent px-6 py-3 text-sm font-medium text-surface transition-transform hover:scale-[1.02] ${className ?? ''}`}
       >
-        All done for today
+        See today&apos;s summary
       </button>
     )
   }
