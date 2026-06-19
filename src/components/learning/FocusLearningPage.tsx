@@ -141,24 +141,17 @@ export function FocusLearningPage({ itemId }: Props) {
     [itemId]
   )
 
-  // 'start' tracking event on mount. Deferred via queueMicrotask so the
-  // effect body itself does not synchronously invoke a function that sets
-  // state (the tracking call's eventual setPlan update happens after the
-  // network round-trip regardless, but this keeps the effect body itself
-  // free of a direct setState-triggering call per the react-hooks rules).
+  // 'start' tracking event on mount.
   useEffect(() => {
     if (!item) return
 
-    let cancelled = false
-
-    queueMicrotask(() => {
-      if (!cancelled) sendTrackingEvent('start')
-    })
-
-    return () => {
-      cancelled = true
+    async function run() {
+      await sendTrackingEvent('start')
     }
-    // Only fire once per mounted item, not on every item field change.
+
+    run()
+    // Only fire once per mounted item, not on every item field change
+    // (sendTrackingEvent is stable across renders via useCallback on itemId).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item?.id])
 
