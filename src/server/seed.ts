@@ -1,5 +1,7 @@
 import { connectMongo } from '@/lib/mongoose'
 import { Lesson } from '@/models/Lesson'
+import { computeQualityScore } from '@/server/learning/quality'
+import { computeDifficultyScore } from '@/server/learning/difficulty'
 
 // Mirrors `toSlug()` in src/server/backfill-lesson-slugs.ts (which itself
 // mirrors the not-yet-created `toSlug()` from src/server/external/normalize.ts,
@@ -96,7 +98,11 @@ export async function seedLessons() {
     }
   }
 
-  const generatedLessons = generateLessons()
+  const generatedLessons = generateLessons().map((lesson) => ({
+    ...lesson,
+    qualityScore: computeQualityScore(lesson),
+    difficultyScore: computeDifficultyScore(lesson),
+  }))
 
   await Lesson.insertMany(generatedLessons)
 

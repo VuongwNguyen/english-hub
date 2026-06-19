@@ -6,6 +6,8 @@ import { Lesson } from '@/models/Lesson'
 import { listeningLessons } from '@/server/data/listening-lessons'
 import { topicTaxonomy } from '@/server/data/topic-taxonomy'
 import { toSlug } from './normalize'
+import { computeQualityScore } from '@/server/learning/quality'
+import { computeDifficultyScore } from '@/server/learning/difficulty'
 
 export async function generateLessonsFromCachedData() {
   await connectMongo()
@@ -35,6 +37,8 @@ async function upsertListeningLessons() {
       {
         $set: {
           ...lesson,
+          qualityScore: computeQualityScore(lesson),
+          difficultyScore: computeDifficultyScore(lesson),
           generatedFrom: 'static_listening_tasks',
           regeneratedAt: new Date(),
         },
@@ -83,13 +87,14 @@ async function generateVocabLessons() {
 
     const slug = `vocab-${toSlug(topic)}`
     const topicGroup = (words[0] as any)?.topicGroups?.[0] ?? 'general'
+    const title = `Vocabulary pack: ${topic}`
 
     const result = await Lesson.updateOne(
       { slug },
       {
         $set: {
           slug,
-          title: `Vocabulary pack: ${topic}`,
+          title,
           topic,
           topicGroup,
           level: 'A2',
@@ -104,6 +109,17 @@ async function generateVocabLessons() {
           isActive: true,
           generatedFrom: 'words_cache',
           regeneratedAt: new Date(),
+          qualityScore: computeQualityScore({
+            title,
+            type: 'vocab',
+            content,
+            wordsCount: words.length,
+          }),
+          difficultyScore: computeDifficultyScore({
+            title,
+            type: 'vocab',
+            content,
+          }),
         },
         $setOnInsert: {
           useCount: 0,
@@ -149,13 +165,14 @@ async function generateSentenceLessons() {
 
     const slug = `dev-english-sentences-${toSlug(topic)}`
     const topicGroup = (sentences[0] as any)?.topicGroups?.[0] ?? 'general'
+    const title = `Sentence practice: ${topic}`
 
     const result = await Lesson.updateOne(
       { slug },
       {
         $set: {
           slug,
-          title: `Sentence practice: ${topic}`,
+          title,
           topic,
           topicGroup,
           level: 'A2',
@@ -170,6 +187,8 @@ async function generateSentenceLessons() {
           isActive: true,
           generatedFrom: 'example_sentences_cache',
           regeneratedAt: new Date(),
+          qualityScore: computeQualityScore({ title, type: 'dev_english', content }),
+          difficultyScore: computeDifficultyScore({ title, type: 'dev_english', content }),
         },
         $setOnInsert: {
           useCount: 0,
@@ -201,13 +220,14 @@ async function generateSpeakingLessons() {
       'Use simple sentences.',
       'Try to use at least 3 words from today’s vocabulary.',
     ].join('\n')
+    const title = `Speaking prompt: ${topic}`
 
     const result = await Lesson.updateOne(
       { slug },
       {
         $set: {
           slug,
-          title: `Speaking prompt: ${topic}`,
+          title,
           topic,
           topicGroup,
           level: 'A2',
@@ -222,6 +242,8 @@ async function generateSpeakingLessons() {
           isActive: true,
           generatedFrom: 'internal_template',
           regeneratedAt: new Date(),
+          qualityScore: computeQualityScore({ title, type: 'speaking', content }),
+          difficultyScore: computeDifficultyScore({ title, type: 'speaking', content }),
         },
         $setOnInsert: {
           useCount: 0,
@@ -254,13 +276,14 @@ async function generateWritingLessons() {
       '2. I had a problem with...',
       '3. Tomorrow I will...',
     ].join('\n')
+    const title = `Writing prompt: ${topic}`
 
     const result = await Lesson.updateOne(
       { slug },
       {
         $set: {
           slug,
-          title: `Writing prompt: ${topic}`,
+          title,
           topic,
           topicGroup,
           level: 'A2',
@@ -275,6 +298,8 @@ async function generateWritingLessons() {
           isActive: true,
           generatedFrom: 'internal_template',
           regeneratedAt: new Date(),
+          qualityScore: computeQualityScore({ title, type: 'writing', content }),
+          difficultyScore: computeDifficultyScore({ title, type: 'writing', content }),
         },
         $setOnInsert: {
           useCount: 0,
@@ -299,8 +324,28 @@ async function generateWritingLessons() {
  * by rotation.ts (task B11) as an emergency safety net when no real lesson
  * exists in the DB for a given type. The `_id` is intentionally a string,
  * not a Mongo ObjectId, since these objects never touch the database.
+ *
+ * qualityScore/difficultyScore are computed (not left at the schema default
+ * of 0) even though this object is never persisted: rotation.ts's
+ * `pickLesson()` only consults real Lesson.find() queries when sorting by
+ * qualityScore (this object short-circuits that path entirely, returned
+ * only when no real lesson exists for the type), so the score is never
+ * actually compared against other lessons today. It's computed anyway so
+ * the values are sane/non-zero if a future caller (e.g. Task 11's
+ * personalization work) starts reading qualityScore off DailyPlanItem
+ * snapshots for display or weighting purposes.
  */
 export function createVirtualFallbackLesson(type: string) {
+  const lesson = buildVirtualFallbackLesson(type)
+
+  return {
+    ...lesson,
+    qualityScore: computeQualityScore(lesson),
+    difficultyScore: computeDifficultyScore(lesson),
+  }
+}
+
+function buildVirtualFallbackLesson(type: string) {
   const base = {
     _id: `virtual-${type}-${Date.now()}`,
     slug: `virtual-${type}`,
