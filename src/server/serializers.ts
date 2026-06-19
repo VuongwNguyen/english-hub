@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { isItemDone } from '@/server/learning/progress'
+
 export function serializeDailyPlan(plan: any) {
   const items = plan.items.map((item: any) => ({
     id: item._id.toString(),
@@ -12,12 +14,18 @@ export function serializeDailyPlan(plan: any) {
     speakingMinutes: item.speakingMinutes,
     writingSentences: item.writingSentences,
     status: item.status,
+    startedAt: item.startedAt ? item.startedAt.toISOString() : null,
     completedAt: item.completedAt ? item.completedAt.toISOString() : null,
+    skippedAt: item.skippedAt ? item.skippedAt.toISOString() : null,
+    activeSeconds: item.activeSeconds ?? 0,
+    progressPercent: item.progressPercent ?? 0,
   }))
 
-  const doneItems = items.filter((item: any) => item.status === 'done')
+  const doneItems = items.filter((item: any) => isItemDone(item.status))
   const skippedItems = items.filter((item: any) => item.status === 'skipped')
-  const pendingItems = items.filter((item: any) => item.status === 'pending')
+  const pendingItems = items.filter(
+    (item: any) => item.status === 'pending' || item.status === 'in_progress'
+  )
 
   const progress = {
     total: items.length,

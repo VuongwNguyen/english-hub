@@ -12,7 +12,12 @@ export const LESSON_LEVELS = ['A1', 'A2', 'B1', 'B2'] as const
 
 export type LessonLevel = (typeof LESSON_LEVELS)[number]
 
-export const ITEM_STATUSES = ['pending', 'done', 'skipped'] as const
+export const ITEM_STATUSES = [
+  'pending',
+  'in_progress',
+  'completed',
+  'skipped',
+] as const
 
 export type ItemStatus = (typeof ITEM_STATUSES)[number]
 
@@ -39,7 +44,11 @@ export type DailyPlanItemDTO = {
   speakingMinutes: number
   writingSentences: number
   status: ItemStatus
+  startedAt?: string | null
   completedAt?: string | null
+  skippedAt?: string | null
+  activeSeconds?: number
+  progressPercent?: number
 }
 
 export type DailyPlanDTO = {

@@ -10,6 +10,8 @@ type Props = {
 
 const statusStyles = {
   pending: 'border border-gold-bright/50 text-gold',
+  in_progress: 'border border-gold-bright/50 text-gold',
+  completed: 'bg-accent-tint text-accent-soft',
   done: 'bg-accent-tint text-accent-soft',
   skipped: 'bg-terracotta-tint text-terracotta',
 }
@@ -23,6 +25,8 @@ export function LessonCard({
 }: Props) {
   const statusLabel = {
     pending: 'Pending',
+    in_progress: 'In progress',
+    completed: 'Done',
     done: 'Done',
     skipped: 'Skipped',
   }[item.status]

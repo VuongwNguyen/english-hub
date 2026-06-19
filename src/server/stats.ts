@@ -3,6 +3,7 @@ import { connectMongo } from '@/lib/mongoose'
 import { getCurrentWeekRange, addDaysToDateString } from '@/lib/date'
 import { DailyPlan } from '@/models/DailyPlan'
 import { DailyStats } from '@/models/DailyStats'
+import { isItemDone } from '@/server/learning/progress'
 
 export async function recalculateDailyStats(date: string) {
   await connectMongo()
@@ -15,9 +16,11 @@ export async function recalculateDailyStats(date: string) {
 
   const items = plan.items ?? []
 
-  const doneItems = items.filter((item: any) => item.status === 'done')
+  const doneItems = items.filter((item: any) => isItemDone(item.status))
   const skippedItems = items.filter((item: any) => item.status === 'skipped')
-  const pendingItems = items.filter((item: any) => item.status === 'pending')
+  const pendingItems = items.filter(
+    (item: any) => item.status === 'pending' || item.status === 'in_progress'
+  )
 
   const minutesSpent = doneItems.reduce(
     (sum: number, item: any) => sum + (item.estimatedMinutes ?? 0),

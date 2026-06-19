@@ -5,6 +5,7 @@ import { getVietnamTodayDate } from '@/lib/date'
 import { DailyPlan } from '@/models/DailyPlan'
 import { maybeRecordComeback, recalculateDailyStats } from '@/server/stats'
 import { serializeDailyPlan } from '@/server/serializers'
+import { isItemDone } from '@/server/learning/progress'
 
 export async function POST(
   request: Request,
@@ -34,12 +35,13 @@ export async function POST(
       )
     }
 
-    const wasInactiveToday = !plan.items.some((i: any) =>
-      ['done', 'skipped'].includes(i.status)
+    const wasInactiveToday = !plan.items.some(
+      (i: any) => isItemDone(i.status) || i.status === 'skipped'
     )
 
-    item.status = 'done'
+    item.status = 'completed'
     item.completedAt = new Date()
+    item.progressPercent = 100
 
     await plan.save()
     await recalculateDailyStats(today)

@@ -47,12 +47,31 @@ const DailyPlanItemSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'done', 'skipped'],
+      enum: ['pending', 'in_progress', 'completed', 'skipped'],
       default: 'pending',
+    },
+    startedAt: {
+      type: Date,
+      default: null,
     },
     completedAt: {
       type: Date,
       default: null,
+    },
+    skippedAt: {
+      type: Date,
+      default: null,
+    },
+    activeSeconds: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    progressPercent: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
     },
   },
   {

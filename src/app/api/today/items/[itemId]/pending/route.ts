@@ -34,7 +34,10 @@ export async function POST(
     }
 
     item.status = 'pending'
+    item.startedAt = null
     item.completedAt = null
+    item.skippedAt = null
+    item.progressPercent = 0
 
     await plan.save()
     await recalculateDailyStats(today)

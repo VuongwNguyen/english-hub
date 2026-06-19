@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { connectMongo } from '@/lib/mongoose'
 import { DailyPlan } from '@/models/DailyPlan'
+import { isItemDone } from '@/server/learning/progress'
 
 export async function getHistory(limit = 30) {
   await connectMongo()
@@ -10,7 +11,7 @@ export async function getHistory(limit = 30) {
   return plans.map((plan: any) => {
     const items = plan.items ?? []
 
-    const doneItems = items.filter((item: any) => item.status === 'done')
+    const doneItems = items.filter((item: any) => isItemDone(item.status))
     const skippedItems = items.filter((item: any) => item.status === 'skipped')
 
     return {
