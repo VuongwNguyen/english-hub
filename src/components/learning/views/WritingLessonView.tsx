@@ -2,12 +2,20 @@
 
 import { useState } from 'react'
 import type { LessonViewProps } from '../lesson-view-types'
+import { useDebouncedTextTracking } from '../useDebouncedTextTracking'
 
-/**
- * Stub view for this task (Task 5). Full writing practice UI/drafting flow
- * is Task 6. Proves the dispatch-by-type + onEvaluate wiring with a plain
- * textarea and a "Check my answer" action.
- */
+// Soft minimum before "Check my answer" is enabled — matches the
+// evaluation heuristic's full-marks word count (evaluation.ts treats 30
+// words as "enough"), but we only require a small fraction of that so the
+// learner isn't blocked harshly while still drafting (section 5.4: no
+// guilt/pressure copy or hard gates).
+const MIN_WORDS_TO_EVALUATE = 5
+
+function countWords(text: string): number {
+  const trimmed = text.trim()
+  return trimmed ? trimmed.split(/\s+/).length : 0
+}
+
 export function WritingLessonView({
   item,
   onTrackingEvent,
@@ -15,6 +23,11 @@ export function WritingLessonView({
   isEvaluating,
 }: LessonViewProps) {
   const [text, setText] = useState('')
+
+  useDebouncedTextTracking(text, onTrackingEvent)
+
+  const wordCount = countWords(text)
+  const canEvaluate = wordCount >= MIN_WORDS_TO_EVALUATE && !isEvaluating
 
   return (
     <section className="rounded-3xl border border-hairline bg-surface p-5 shadow-card sm:p-6">
@@ -24,28 +37,31 @@ export function WritingLessonView({
 
       <textarea
         value={text}
-        onChange={(event) => {
-          const value = event.target.value
-          setText(value)
-          onTrackingEvent('text_change', {
-            typedWordCount: value.trim() ? value.trim().split(/\s+/).length : 0,
-            typedCharacterCount: value.length,
-            draftText: value,
-          })
-        }}
-        rows={6}
-        placeholder="Write your response here..."
+        onChange={(event) => setText(event.target.value)}
+        rows={8}
+        placeholder="Write your response here. A few sentences is a great start."
         className="mt-4 w-full rounded-2xl border border-hairline bg-surface-soft p-4 text-ink outline-none focus:border-accent"
       />
 
-      <div className="mt-5 flex flex-wrap gap-3">
+      <div className="mt-2 flex items-center justify-between text-xs text-ink-soft">
+        <span>{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
+        <span>Your progress is saved automatically.</span>
+      </div>
+
+      <div className="mt-5 flex flex-wrap items-center gap-3">
         <button
-          disabled={isEvaluating}
+          disabled={!canEvaluate}
           onClick={() => onEvaluate({ text })}
           className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-surface disabled:opacity-50"
         >
-          Check my answer
+          {isEvaluating ? 'Checking...' : 'Check my answer'}
         </button>
+
+        {!canEvaluate && !isEvaluating && (
+          <span className="text-xs text-ink-soft">
+            Write a little more, then check your answer.
+          </span>
+        )}
       </div>
     </section>
   )
