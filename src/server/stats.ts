@@ -63,21 +63,6 @@ export async function recalculateDailyStats(date: string) {
   )
 }
 
-export async function getDailyStats(from?: string, to?: string) {
-  await connectMongo()
-
-  const query: Record<string, any> = {}
-
-  if (from || to) {
-    query.date = {}
-
-    if (from) query.date.$gte = from
-    if (to) query.date.$lte = to
-  }
-
-  return DailyStats.find(query).sort({ date: 1 }).lean()
-}
-
 export async function getWeeklyStats(today: string) {
   await connectMongo()
 

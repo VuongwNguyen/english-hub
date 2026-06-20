@@ -5,6 +5,8 @@ import { AppShell } from '@/components/AppShell'
 import { EmptyState } from '@/components/EmptyState'
 import { LoadingState } from '@/components/LoadingState'
 import { StatsCard } from '@/components/StatsCard'
+import { HistoryList } from '@/components/HistoryList'
+import type { HistoryEntryDTO } from '@/types/english'
 
 type WeeklyStats = {
   from: string
@@ -19,23 +21,9 @@ type WeeklyStats = {
   comebackCount: number
 }
 
-type DailyStats = {
-  date: string
-  totalItems: number
-  doneItems: number
-  skippedItems: number
-  pendingItems: number
-  minutesSpent: number
-  wordsLearned: number
-  speakingMinutes: number
-  writingSentences: number
-  comeback: number
-  note?: string
-}
-
 export default function StatsPage() {
   const [weekly, setWeekly] = useState<WeeklyStats | null>(null)
-  const [daily, setDaily] = useState<DailyStats[]>([])
+  const [history, setHistory] = useState<HistoryEntryDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
 
@@ -44,30 +32,25 @@ export default function StatsPage() {
 
     async function run() {
       try {
-        const weeklyResponse = await fetch('/api/stats/weekly', {
-          cache: 'no-store',
-        })
+        const [weeklyResponse, historyResponse] = await Promise.all([
+          fetch('/api/stats/weekly', { cache: 'no-store' }),
+          fetch('/api/history', { cache: 'no-store' }),
+        ])
 
         if (!weeklyResponse.ok) {
           throw new Error('Failed to load weekly stats')
         }
 
-        const weeklyData: WeeklyStats = await weeklyResponse.json()
-
-        const dailyResponse = await fetch(
-          `/api/stats/daily?from=${weeklyData.from}&to=${weeklyData.to}`,
-          { cache: 'no-store' }
-        )
-
-        if (!dailyResponse.ok) {
-          throw new Error('Failed to load daily stats')
+        if (!historyResponse.ok) {
+          throw new Error('Failed to load history')
         }
 
-        const dailyData: DailyStats[] = await dailyResponse.json()
+        const weeklyData: WeeklyStats = await weeklyResponse.json()
+        const historyData: HistoryEntryDTO[] = await historyResponse.json()
 
         if (active) {
           setWeekly(weeklyData)
-          setDaily(dailyData)
+          setHistory(historyData)
         }
       } catch (error) {
         console.error(error)
@@ -96,7 +79,7 @@ export default function StatsPage() {
           Stats
         </p>
 
-        <h1 className="mt-2 font-display text-3xl font-medium text-ink">Your week so far.</h1>
+        <h1 className="mt-2 font-display text-3xl font-medium text-ink">Your progress so far.</h1>
 
         <p className="mt-2 text-ink-soft">
           A calm look back. Every bit of progress counts.
@@ -116,7 +99,7 @@ export default function StatsPage() {
         <div className="grid gap-6">
           <section className="rounded-3xl border border-t-2 border-hairline border-t-gold-bright bg-surface p-6 shadow-card">
             <p className="text-sm text-muted">
-              {weekly.from} to {weekly.to}
+              This week: {weekly.from} to {weekly.to}
             </p>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-4">
@@ -143,28 +126,21 @@ export default function StatsPage() {
             </div>
           </section>
 
-          {daily.length > 0 && (
-            <section className="rounded-3xl border border-t-2 border-hairline border-t-gold-bright bg-surface p-6 shadow-card">
-              <h2 className="font-display text-lg font-medium text-ink">Day by day</h2>
+          <section className="rounded-3xl border border-t-2 border-hairline border-t-gold-bright bg-surface p-6 shadow-card">
+            <h2 className="font-display text-lg font-medium text-ink">Your last 30 days</h2>
 
-              <div className="mt-4 grid gap-2">
-                {daily.map((day) => (
-                  <div
-                    key={day.date}
-                    className="flex flex-col gap-1 rounded-2xl bg-surface-soft p-4 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <p className="font-medium text-ink">{day.date}</p>
+            <p className="mt-1 text-sm text-ink-soft">
+              A gentle record of what you have practiced.
+            </p>
 
-                    <div className="flex flex-wrap gap-4 text-sm text-muted">
-                      <span>{day.doneItems} done</span>
-                      <span>{day.skippedItems} skipped</span>
-                      <span>{day.minutesSpent} minutes</span>
-                    </div>
-                  </div>
-                ))}
+            {history.length === 0 ? (
+              <p className="mt-4 text-sm text-muted">No history yet.</p>
+            ) : (
+              <div className="mt-4">
+                <HistoryList entries={history} />
               </div>
-            </section>
-          )}
+            )}
+          </section>
         </div>
       )}
     </AppShell>
