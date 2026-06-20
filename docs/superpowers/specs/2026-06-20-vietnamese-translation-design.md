@@ -17,9 +17,34 @@ to lesson content only — not UI labels.
 
 ## Translation source
 
-[MyMemory Translation API](https://mymemory.translated.net/doc/spec.php) —
-free, keyless, anonymous-tier limit ~5000 words/day. No new env vars or
-secrets required.
+The `claude` CLI (Claude Code), shelled out from the server process as a
+child process — not the MyMemory API, and not the Anthropic SDK/API key.
+This app has exactly one user (the developer themselves), running on a
+machine already authenticated to Claude Code via OAuth/subscription login,
+so shelling out to the locally-installed `claude` binary is acceptable and
+needs no new credentials, env vars, or scale/concurrency handling.
+
+Invocation: `claude -p --model haiku "<prompt>"` (confirmed working via live
+test — do **not** add `--bare`, since that flag requires
+`ANTHROPIC_API_KEY`/`apiKeyHelper` and ignores OAuth, which fails on this
+machine with "Not logged in"). The whole lesson `content` is translated in a
+single call (not per-line), with a 30 second timeout. On timeout, non-zero
+exit, or empty output, the call is treated as a failure (see Error handling).
+
+This reuses a shared low-level wrapper, `src/server/external/claude-cli.ts`,
+also used by the AI-grading feature (see
+`docs/superpowers/specs/2026-06-20-ai-grading-design.md`):
+
+```ts
+export async function runClaude(
+  prompt: string,
+  opts?: { model?: string; timeoutMs?: number }
+): Promise<string>
+```
+
+Spawns `claude -p --model <model ?? 'haiku'> <prompt>`, kills the process and
+throws `ClaudeCliError` if it exceeds `timeoutMs` (default 30000) or exits
+non-zero, and returns trimmed stdout otherwise.
 
 ## Timing: on-demand, not pre-generated
 
@@ -60,15 +85,12 @@ translatedAt: { type: Date, default: null },
 
 New file `src/server/translation/translate-content.ts`:
 
-- `translateToVietnamese(text: string): Promise<string>` — calls MyMemory's
-  `GET /get?q=<line>&langpair=en|vi` once per non-empty line of `text`
-  (splitting on `\n`, same line structure all 5 lesson types already use for
-  their `content` field). Per-line calls keep each request well under
-  MyMemory's ~500-character practical limit and preserve the original
-  line/bullet structure in the translated output. Empty lines pass through
-  unchanged. Reuses `fetchJson`/`HttpError` from
-  `src/server/external/http.ts` for consistency with the other external
-  integrations.
+- `translateToVietnamese(text: string): Promise<string>` — calls
+  `runClaude()` once with the whole `text` wrapped in a prompt instructing
+  Claude to translate it to Vietnamese, preserve line breaks/structure, and
+  reply with **only** the translation (no commentary, no markdown). Throws
+  `TranslationFailedError` if `runClaude` throws (timeout/non-zero exit) or
+  returns empty output.
 - `getOrTranslateLessonContent(lessonId, fallbackContent): Promise<string>`:
   1. If `lessonId` resolves to a real `Lesson` doc with `translatedContent`
      already set, return it (no API call).
@@ -130,7 +152,7 @@ Behavior:
 
 ## Error handling
 
-- MyMemory request failure (network/HTTP error) on any line → the whole
+- `claude` CLI failure (timeout, non-zero exit, empty output) → the whole
   translate call fails; the route returns 502 with `{ error: 'Failed to
   translate content' }`. The client shows the retry message above. No
   partial/garbled translations are cached.
@@ -139,11 +161,12 @@ Behavior:
 
 ## Testing
 
-- Unit test `translateToVietnamese` line-splitting and joining behavior
-  (mock `fetchJson`).
+- Unit test `runClaude`'s timeout/non-zero-exit handling (mock
+  `child_process.spawn`).
 - Unit test `getOrTranslateLessonContent`'s three branches (cached / needs
-  translation / virtual fallback) with a mocked `Lesson` model.
+  translation / virtual fallback) with a mocked `Lesson` model and a mocked
+  `translateToVietnamese`.
 - Manual verification in browser: toggle button in each of the 5 lesson
-  types, confirm cache behavior (second learner/second visit to the same
-  lesson does not trigger a new MyMemory call — verify via server log or by
-  checking `Lesson.translatedAt` doesn't change).
+  types, confirm cache behavior (second visit to the same lesson does not
+  trigger a new `claude` call — verify via server log or by checking
+  `Lesson.translatedAt` doesn't change).
